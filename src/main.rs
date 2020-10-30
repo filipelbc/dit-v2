@@ -1,5 +1,9 @@
 use clap::{App, Arg};
+use log::debug;
 use std::env;
+
+mod utils;
+use utils::graceful::Graceful;
 
 fn fetch_arg<'a>() -> Arg<'a> {
     return Arg::new("fetch")
@@ -133,4 +137,9 @@ fn main() {
             .arg(at_arg()),
         )
         .get_matches();
+
+    utils::logging::init(matches.is_present("verbose"));
+
+    let directory = utils::directory::resolve(matches.value_of("directory")).graceful();
+    debug!("Using data directory: {}", directory.display());
 }
