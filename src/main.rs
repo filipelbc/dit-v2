@@ -6,39 +6,39 @@ mod utils;
 use utils::graceful::Graceful;
 
 fn fetch_arg<'a>() -> Arg<'a> {
-    return Arg::new("fetch")
+    Arg::new("fetch")
         .short('f')
         .long("fetch")
-        .about("Use data fetcher plugin.");
+        .about("Use data fetcher plugin.")
 }
 
 fn task_param<'a>() -> Arg<'a> {
-    return Arg::new("task")
-        .about("Name of the task on which to start clocking.")
+    Arg::new("task")
+        .about("The target task for the command.")
         .value_name("TASK")
-        .required(true);
+        .required(true)
 }
 
 fn new_arg<'a>() -> Arg<'a> {
-    return Arg::new("new")
+    Arg::new("new")
         .about("Also create the task.")
         .long("new")
-        .short('n');
+        .short('n')
 }
 
 fn title_arg<'a>() -> Arg<'a> {
-    return Arg::new("title")
-        .about("Title of the task to be created. Only relevant if '--new' is used.")
+    Arg::new("title")
+        .about("Title of the new task. Only relevant if '--new' is used. If absent, you'll be prompted for it.")
         .value_name("TITLE")
-        .requires("new");
+        .requires("new")
 }
 
 fn at_arg<'a>() -> Arg<'a> {
-    return Arg::new("at")
+    Arg::new("at")
         .about("Use the given datetime instead of 'now'.")
         .value_name("DATETIME")
         .long("at")
-        .short('a');
+        .short('a')
 }
 
 fn main() {
@@ -52,41 +52,41 @@ fn main() {
             .long("directory")
             .short('d')
             .value_name("DIRECTORY")
-            .takes_value(true),
+            .takes_value(true)
         )
         .arg(
             Arg::new("verbose")
             .about("Prints detailed information of what is being done.")
             .long("verbose")
-            .short('v'),
+            .short('v')
         )
         .arg(
             Arg::new("check-hooks")
             .about("Stop with error if a hook process fail.")
-            .long("check-hooks"),
+            .long("check-hooks")
         )
         .arg(
             Arg::new("no-hooks")
             .about("Disables the use of hooks.")
-            .long("no-hooks"),
+            .long("no-hooks")
         )
         .subcommand(
             App::new("new")
             .visible_alias("n")
             .about("Creates a new task. You'll be prompted for its title if it is not provided.")
             .arg(
-                Arg::new("name")
-                .value_name("NAME")
+                Arg::new("task")
+                .about("Task to be created. This is the main identifier of the task. Use '/' to create nested tasks, e.g. 'foo/bar'.")
+                .value_name("TASK")
                 .required(true)
-                .about("Name of the task. This is the main identifier of the task. Use '/' to create nested tasks, e.g. 'foo/bar'."),
             )
             .arg(
                 Arg::new("title")
+                .about("Title of the task. If absent, you'll be prompted for it.")
                 .value_name("TITLE")
                 .required(false)
-                .about("Title of the task."),
             )
-            .arg(fetch_arg()),
+            .arg(fetch_arg())
         )
         .subcommand(
             App::new("work-on")
@@ -102,23 +102,23 @@ fn main() {
             App::new("halt")
             .visible_alias("h")
             .about("Stops clocking on the currently active task. Does nothing if there is no active task.")
-            .arg(at_arg()),
+            .arg(at_arg())
         )
         .subcommand(
             App::new("append")
             .visible_alias("a")
-            .about("Undoes the previous 'halt'."),
+            .about("Undoes the previous 'halt'.")
         )
         .subcommand(
             App::new("cancel")
             .visible_alias("c")
-            .about("Undoes the previous 'work-on'. Does nothing if there is no active task."),
+            .about("Undoes the previous 'work-on'. Does nothing if there is no active task.")
         )
         .subcommand(
             App::new("resume")
             .visible_alias("r")
             .about("Starts clocking on the CURRENT task. Same as a 'work-on CURRENT'. Does nothing if there is no CURRENT task.")
-            .arg(at_arg()),
+            .arg(at_arg())
         )
         .subcommand(
             App::new("switch-to")
@@ -128,13 +128,13 @@ fn main() {
             .arg(at_arg())
             .arg(new_arg())
             .arg(fetch_arg())
-            .arg(title_arg()),
+            .arg(title_arg())
         )
         .subcommand(
             App::new("switch-back")
             .visible_alias("b")
             .about("Stops clocking on the CURRENT task, and starts clocking on the PREVIOUS task. Same as 'halt' followed by 'work-on PREVIOUS'.")
-            .arg(at_arg()),
+            .arg(at_arg())
         )
         .get_matches();
 
