@@ -1,4 +1,4 @@
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg};
 use log::debug;
 use std::env;
 
@@ -44,8 +44,15 @@ fn at_arg<'a>() -> Arg<'a> {
         .short('a')
 }
 
+fn new_app<'a>(name: &str) -> App<'a> {
+    App::new(name)
+        .setting(AppSettings::UnifiedHelpMessage)
+}
+
 fn main() {
-    let matches = App::new(env!("CARGO_PKG_NAME"))
+    let matches = new_app(env!("CARGO_PKG_NAME"))
+        .setting(AppSettings::SubcommandRequired)
+        .setting(AppSettings::DeriveDisplayOrder)
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
@@ -56,25 +63,29 @@ fn main() {
             .short('d')
             .value_name("DIRECTORY")
             .takes_value(true)
+            .global(true)
         )
         .arg(
             Arg::new("verbose")
             .about("Prints detailed information of what is being done.")
             .long("verbose")
             .short('v')
+            .global(true)
         )
         .arg(
             Arg::new("check-hooks")
             .about("Stop with error if a hook process fail.")
             .long("check-hooks")
+            .global(true)
         )
         .arg(
             Arg::new("no-hooks")
             .about("Disables the use of hooks.")
             .long("no-hooks")
+            .global(true)
         )
         .subcommand(
-            App::new("new")
+            new_app("new")
             .visible_alias("n")
             .about("Creates a new task. You'll be prompted for its title if it is not provided.")
             .arg(
@@ -93,7 +104,7 @@ fn main() {
             .arg(fetch_arg())
         )
         .subcommand(
-            App::new("work-on")
+            new_app("work-on")
             .visible_alias("w")
             .about("Starts clocking on the specified task. Does nothing if there already is an active task. Sets the CURRENT task.")
             .arg(task_param())
@@ -103,29 +114,29 @@ fn main() {
             .arg(title_arg()),
         )
         .subcommand(
-            App::new("halt")
+            new_app("halt")
             .visible_alias("h")
             .about("Stops clocking on the currently active task. Does nothing if there is no active task.")
             .arg(at_arg())
         )
         .subcommand(
-            App::new("append")
+            new_app("append")
             .visible_alias("a")
             .about("Undoes the previous 'halt'.")
         )
         .subcommand(
-            App::new("cancel")
+            new_app("cancel")
             .visible_alias("c")
             .about("Undoes the previous 'work-on'. Does nothing if there is no active task.")
         )
         .subcommand(
-            App::new("resume")
+            new_app("resume")
             .visible_alias("r")
             .about("Starts clocking on the CURRENT task. Same as a 'work-on CURRENT'. Does nothing if there is no CURRENT task.")
             .arg(at_arg())
         )
         .subcommand(
-            App::new("switch-to")
+            new_app("switch-to")
             .visible_alias("s")
             .about("Stops clocking on the CURRENT task, and starts clocking on the specified task. Same as 'halt' followed by 'work-on TASK'.")
             .arg(task_param())
@@ -135,7 +146,7 @@ fn main() {
             .arg(title_arg())
         )
         .subcommand(
-            App::new("switch-back")
+            new_app("switch-back")
             .visible_alias("b")
             .about("Stops clocking on the CURRENT task, and starts clocking on the PREVIOUS task. Same as 'halt' followed by 'work-on PREVIOUS'.")
             .arg(at_arg())
