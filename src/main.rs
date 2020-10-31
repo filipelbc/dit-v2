@@ -5,6 +5,8 @@ use std::env;
 mod utils;
 use utils::graceful::Graceful;
 
+mod models;
+
 fn fetch_arg<'a>() -> Arg<'a> {
     Arg::new("fetch")
         .short('f')
@@ -17,6 +19,7 @@ fn task_param<'a>() -> Arg<'a> {
         .about("The target task for the command.")
         .value_name("TASK")
         .required(true)
+        .validator(models::validate_task_key)
 }
 
 fn new_arg<'a>() -> Arg<'a> {
@@ -79,6 +82,7 @@ fn main() {
                 .about("Task to be created. This is the main identifier of the task. Use '/' to create nested tasks, e.g. 'foo/bar'.")
                 .value_name("TASK")
                 .required(true)
+                .validator(models::validate_task_key)
             )
             .arg(
                 Arg::new("title")

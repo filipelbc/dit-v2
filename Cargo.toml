@@ -12,3 +12,5 @@ description = "A work time tracking tool"
 clap = "3.0.0-beta.2"
 log = { version = "0.4", features = ["std"] }
 dirs = "3.0"
+regex = "1.4"
+lazy_static = "1.4"
