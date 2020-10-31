@@ -2,6 +2,9 @@ use log::debug;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use dirs::home_dir;
+
+const DIT_DIR_NAME: &str = ".dit";
 
 pub fn resolve(path: Option<&str>) -> Result<PathBuf, String> {
     println!("{:?}", path);
@@ -44,10 +47,13 @@ fn ensure_exists(path: PathBuf) -> Result<PathBuf, String> {
 fn search_from(path: PathBuf) -> Result<PathBuf, String> {
     let mut ancerstors = path.ancestors();
     while let Some(p) = ancerstors.next() {
-        let path = p.join(".dit");
+        let path = p.join(DIT_DIR_NAME);
         if path.is_dir() {
             return Ok(path);
         }
     }
-    ensure_exists(PathBuf::from("~/.dit"))
+    match home_dir() {
+        Some(home) => ensure_exists(home.join(DIT_DIR_NAME)),
+        None => Err(String::from("Home directory not found")),
+    }
 }
