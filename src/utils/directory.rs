@@ -7,7 +7,6 @@ use dirs::home_dir;
 const DIT_DIR_NAME: &str = ".dit";
 
 pub fn resolve(path: Option<&str>) -> Result<PathBuf, String> {
-    println!("{:?}", path);
     let directory = match path {
         Some(path) => ensure_exists(PathBuf::from(path)),
         None => match env::current_dir() {
