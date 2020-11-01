@@ -50,7 +50,7 @@ fn new_app<'a>(name: &str) -> App<'a> {
 }
 
 fn main() {
-    let matches = new_app(env!("CARGO_PKG_NAME"))
+    let margs = new_app(env!("CARGO_PKG_NAME"))
         .setting(AppSettings::SubcommandRequired)
         .setting(AppSettings::DeriveDisplayOrder)
         .version(env!("CARGO_PKG_VERSION"))
@@ -153,8 +153,8 @@ fn main() {
         )
         .get_matches();
 
-    utils::logging::init(matches.is_present("verbose"));
+    utils::logging::init(margs.is_present("verbose"));
 
-    let directory = utils::directory::resolve(matches.value_of("directory")).graceful();
+    let directory = utils::directory::resolve(margs.value_of("directory")).graceful();
     debug!("Using data directory: {}", directory.display());
 }
