@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -10,4 +11,8 @@ pub fn validate_task_key(key: &str) -> Result<(), String> {
         true => Ok(()),
         false => Err(String::from(key)),
     }
+}
+
+pub trait Repository {
+    fn new(directory: PathBuf) -> Self;
 }
