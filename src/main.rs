@@ -29,7 +29,7 @@ fn run(args: ArgMatches) -> Result<(), String> {
         ),
         Some(("work-on", cargs)) => {
             let task = cargs.value_of("task").unwrap();
-            let now = utils::time::resolve(cargs.value_of("at"));
+            let now = utils::time::resolve(cargs.value_of("at"))?;
 
             if cargs.is_present("new") {
                 dit.do_new(task, cargs.value_of("title"), cargs.is_present("fetch"))?;
@@ -38,20 +38,20 @@ fn run(args: ArgMatches) -> Result<(), String> {
             dit.do_work_on(task, now)
         }
         Some(("halt", cargs)) => {
-            let now = utils::time::resolve(cargs.value_of("at"));
+            let now = utils::time::resolve(cargs.value_of("at"))?;
 
             dit.do_halt(now)
         }
         Some(("append", _)) => dit.do_append(),
         Some(("cancel", _)) => dit.do_cancel(),
         Some(("resume", cargs)) => {
-            let now = utils::time::resolve(cargs.value_of("at"));
+            let now = utils::time::resolve(cargs.value_of("at"))?;
 
             dit.do_resume(now)
         }
         Some(("switch-to", cargs)) => {
             let task = cargs.value_of("task").unwrap();
-            let now = utils::time::resolve(cargs.value_of("at"));
+            let now = utils::time::resolve(cargs.value_of("at"))?;
 
             if cargs.is_present("new") {
                 dit.do_new(task, cargs.value_of("title"), cargs.is_present("fetch"))?;
@@ -62,7 +62,7 @@ fn run(args: ArgMatches) -> Result<(), String> {
             dit.do_work_on(task, now)
         }
         Some(("switch-back", cargs)) => {
-            let now = utils::time::resolve(cargs.value_of("at"));
+            let now = utils::time::resolve(cargs.value_of("at"))?;
 
             dit.do_switch_back(now)
         }
