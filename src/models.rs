@@ -13,8 +13,31 @@ pub fn validate_task_key(key: &str) -> Result<(), String> {
     }
 }
 
+pub struct TaskData {
+    title: String,
+}
+
+pub struct Task {
+    id: String,
+    data: TaskData,
+}
+
+impl Task {
+    pub fn new(id: String) -> Task {
+        Task {
+            id,
+            data: TaskData {
+                title: String::from("Fixme"),
+            }
+        }
+    }
+}
+
 pub trait Repository {
     fn new(directory: PathBuf) -> Self;
+    fn resolve_key(&self, key: &str) -> String;
+    fn exists(&self, id: &String) -> bool;
+    fn save(&self, task: &Task) -> Result<(), String>;
 }
 
 #[cfg(test)]
