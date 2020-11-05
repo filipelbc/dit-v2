@@ -1,25 +1,17 @@
-use std::path::PathBuf;
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
-lazy_static! {
-    static ref TASK_KEY: Regex = Regex::new(r"^(/?[A-Za-z][0-9A-Za-z_-]*)+$").unwrap();
-}
-
-pub fn validate_task_key(key: &str) -> Result<(), String> {
-    match TASK_KEY.is_match(key) {
-        true => Ok(()),
-        false => Err(String::from(key)),
-    }
-}
-
-pub struct TaskData {
-    title: String,
-}
-
+#[derive(Serialize, Deserialize)]
 pub struct Task {
-    id: String,
-    data: TaskData,
+    pub id: String,
+    pub data: TaskData,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TaskData {
+    pub title: String,
 }
 
 impl Task {
@@ -28,7 +20,14 @@ impl Task {
             id,
             data: TaskData {
                 title: String::from("Fixme"),
-            }
+            },
+        }
+    }
+
+    pub fn validate_key(key: &str) -> Result<(), String> {
+        match TASK_KEY.is_match(key) {
+            true => Ok(()),
+            false => Err(String::from(key)),
         }
     }
 }
@@ -40,14 +39,18 @@ pub trait Repository {
     fn save(&self, task: &Task) -> Result<(), String>;
 }
 
+lazy_static! {
+    static ref TASK_KEY: Regex = Regex::new(r"^(/?[A-Za-z][0-9A-Za-z_-]*)+$").unwrap();
+}
+
 #[cfg(test)]
 mod tests {
 
-    use super::validate_task_key;
+    use super::Task;
 
     macro_rules! assert_valid_key {
         ($expr:expr) => {{
-            if let Err(_) = validate_task_key($expr) {
+            if let Err(_) = Task::validate_key($expr) {
                 panic!(
                     "assertion failed: {} was expected to be a valid key",
                     stringify!($expr),
@@ -58,7 +61,7 @@ mod tests {
 
     macro_rules! assert_invalid_key {
         ($expr:expr) => {{
-            if let Ok(_) = validate_task_key($expr) {
+            if let Ok(_) = Task::validate_key($expr) {
                 panic!(
                     "assertion failed: {} was not expected to be valid",
                     stringify!($expr),

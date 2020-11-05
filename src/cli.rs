@@ -1,6 +1,6 @@
 use clap::{App, AppSettings, Arg, ArgMatches};
 
-use crate::models;
+use crate::models::Task;
 
 fn fetch_arg<'a>() -> Arg<'a> {
     Arg::new("fetch")
@@ -14,7 +14,7 @@ fn task_param<'a>() -> Arg<'a> {
         .about("The target task for the command.")
         .value_name("TASK")
         .required(true)
-        .validator(models::validate_task_key)
+        .validator(Task::validate_key)
 }
 
 fn new_arg<'a>() -> Arg<'a> {
@@ -87,7 +87,7 @@ pub fn parse() -> ArgMatches {
                 .about("Task to be created. This is the main identifier of the task. Use '/' to create nested tasks, e.g. 'foo/bar'.")
                 .value_name("TASK")
                 .required(true)
-                .validator(models::validate_task_key)
+                .validator(Task::validate_key)
             )
             .arg(
                 Arg::new("title")
