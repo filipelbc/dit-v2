@@ -65,6 +65,7 @@ pub fn parse() -> ArgMatches {
             .long("verbose")
             .short('v')
             .global(true)
+            .multiple_occurrences(true)
         )
         .arg(
             Arg::new("check-hooks")

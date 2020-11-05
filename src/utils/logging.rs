@@ -1,10 +1,10 @@
-use log::{Level, LevelFilter, Metadata, Record};
+use log::{LevelFilter, Metadata, Record};
 
 struct Logger;
 
 impl log::Log for Logger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Debug
+    fn enabled(&self, _: &Metadata) -> bool {
+        true
     }
 
     fn log(&self, record: &Record) {
@@ -16,11 +16,12 @@ impl log::Log for Logger {
     fn flush(&self) {}
 }
 
-pub fn init(verbose: bool) {
+pub fn init(verbosity: u64) {
     log::set_boxed_logger(Box::new(Logger)).unwrap();
 
-    match verbose {
-        false => log::set_max_level(LevelFilter::Info),
-        true => log::set_max_level(LevelFilter::Debug),
+    match verbosity {
+        0 => log::set_max_level(LevelFilter::Info),
+        1 => log::set_max_level(LevelFilter::Debug),
+        _ => log::set_max_level(LevelFilter::Trace),
     }
 }

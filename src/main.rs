@@ -74,7 +74,7 @@ fn run(args: ArgMatches) -> Result<(), String> {
 fn main() {
     let args = cli::parse();
 
-    utils::logging::init(args.is_present("verbose"));
+    utils::logging::init(args.occurrences_of("verbose"));
 
     run(args).graceful();
 }
