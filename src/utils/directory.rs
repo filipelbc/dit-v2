@@ -1,45 +1,42 @@
-use log::debug;
+use dirs::home_dir;
+use log::trace;
 use std::env;
 use std::fs;
-use std::path::PathBuf;
-use dirs::home_dir;
+use std::path::{Path, PathBuf};
 
 const DIT_DIR_NAME: &str = ".dit";
 
 pub fn resolve(path: Option<&str>) -> Result<PathBuf, String> {
     let directory = match path {
-        Some(path) => ensure_exists(PathBuf::from(path)),
+        Some(path) => ensure_exists(Path::new(path)).map(|_| PathBuf::from(path)),
         None => match env::current_dir() {
             Ok(path) => search_from(path),
-            _ => Err(format!("Could not read current directory")),
+            Err(e) => Err(format!("Could not read current directory: {}", e)),
         },
     };
 
-    match directory {
-        Ok(path) => match path.canonicalize() {
-            Ok(path) => Ok(path),
-            _ => Err(format!(
-                "Could not canonicalize directory: {}",
-                path.display()
-            )),
-        },
-        Err(x) => Err(x),
-    }
+    directory.and_then(|p| {
+        p.canonicalize().map_err(|e| {
+            format!(
+                "Could not canonicalize directory: {}\n-> {}",
+                p.display(),
+                e
+            )
+        })
+    })
 }
 
-fn ensure_exists(path: PathBuf) -> Result<PathBuf, String> {
+pub fn ensure_exists(path: &Path) -> Result<(), String> {
     match path.exists() {
         true => match path.is_dir() {
-            true => Ok(path),
+            true => Ok(()),
             false => Err(format!("Not a directory: {}", path.display())),
         },
-        false => match fs::create_dir_all(&path) {
-            Ok(()) => {
-                debug!("Created directory: {}", path.display());
-                Ok(path)
-            }
-            _ => Err(format!("Could not create directory: {}", path.display())),
-        },
+        false => {
+            trace!("Creating directory: {}", path.display());
+            fs::create_dir_all(&path)
+                .map_err(|e| format!("Could not create directory: {}\n-> {}", path.display(), e))
+        }
     }
 }
 
@@ -52,7 +49,10 @@ fn search_from(path: PathBuf) -> Result<PathBuf, String> {
         }
     }
     match home_dir() {
-        Some(home) => ensure_exists(home.join(DIT_DIR_NAME)),
+        Some(home) => {
+            let p = home.join(DIT_DIR_NAME);
+            ensure_exists(p.as_path()).map(|_| p)
+        }
         None => Err(String::from("Home directory not found")),
     }
 }
