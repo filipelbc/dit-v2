@@ -34,7 +34,8 @@ impl Dit {
             bail!("Task does not exist: {}", id);
         }
 
-        bail!("Not implemented")
+        self.repo.clock_in(&id, now)
+            .map(|()| info!("Working on: {}", id))
     }
 
     pub fn do_halt(&self, now: LocalDateTime) -> Result<()> {

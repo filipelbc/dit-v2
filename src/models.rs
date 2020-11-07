@@ -4,6 +4,8 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+use crate::utils::time::LocalDateTime;
+
 pub struct Task {
     pub id: String,
     pub data: TaskData,
@@ -12,6 +14,14 @@ pub struct Task {
 #[derive(Serialize, Deserialize)]
 pub struct TaskData {
     pub title: String,
+    #[serde(default)]
+    pub log: Vec<LogEntry>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LogEntry {
+    pub start: LocalDateTime,
+    pub end: Option<LocalDateTime>,
 }
 
 impl Task {
@@ -20,8 +30,13 @@ impl Task {
             id,
             data: TaskData {
                 title: String::from("Fixme"),
+                log: Vec::new(),
             },
         }
+    }
+
+    pub fn from_data(id: String, data: TaskData) -> Task {
+        Task { id, data }
     }
 
     pub fn validate_key(key: &str) -> Result<(), String> {
@@ -30,6 +45,16 @@ impl Task {
             false => Err(String::from(key)),
         }
     }
+
+    pub fn add_log_entry(&mut self, entry: LogEntry) {
+        self.data.log.push(entry);
+    }
+}
+
+impl LogEntry {
+    pub fn new(start: LocalDateTime) -> LogEntry {
+        LogEntry { start, end: None }
+    }
 }
 
 pub trait Repository {
@@ -37,6 +62,8 @@ pub trait Repository {
     fn resolve_key(&self, key: &str) -> String;
     fn exists(&self, id: &String) -> bool;
     fn save(&self, task: &Task) -> Result<()>;
+    fn load(&self, id: &String) -> Result<Task>;
+    fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()>;
 }
 
 lazy_static! {
