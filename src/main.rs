@@ -1,3 +1,4 @@
+use anyhow::{Result, bail};
 use clap::ArgMatches;
 use log::debug;
 
@@ -15,7 +16,7 @@ use crate::commands::Dit;
 
 mod cli;
 
-fn run(args: ArgMatches) -> Result<(), String> {
+fn run(args: ArgMatches) -> Result<()> {
     let directory = utils::directory::resolve(args.value_of("directory"))?;
     debug!("Using data directory: {}", directory.display());
 
@@ -66,8 +67,8 @@ fn run(args: ArgMatches) -> Result<(), String> {
 
             dit.do_switch_back(now)
         }
-        Some((cmd, _)) => Err(format!("Unhandled subcommand: {}", cmd)),
-        None => Err(String::from("No subcommand provided")),
+        Some((cmd, _)) => bail!("Unhandled subcommand: {}", cmd),
+        None => bail!("No subcommand provided"),
     }
 }
 

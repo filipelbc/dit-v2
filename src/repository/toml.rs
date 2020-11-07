@@ -1,10 +1,11 @@
-use log::{trace, debug};
+use anyhow::{Context, Result};
+use log::{debug, trace};
 use std::fs;
 use std::path::PathBuf;
 use toml;
 
-use crate::utils::directory;
 use crate::models::{Repository, Task};
+use crate::utils::directory;
 
 pub struct Repo {
     directory: PathBuf,
@@ -23,7 +24,7 @@ impl Repository for Repo {
         self.path(&id).exists()
     }
 
-    fn save(&self, task: &Task) -> Result<(), String> {
+    fn save(&self, task: &Task) -> Result<()> {
         debug!("Saving task: {}", task.id);
 
         let f = self.path(&task.id);
@@ -33,8 +34,9 @@ impl Repository for Repo {
         let p = f.parent().unwrap();
         directory::ensure_exists(p)?;
 
-        let s = toml::to_string_pretty(&task.data).map_err(|e| e.to_string())?;
-        fs::write(f, s).map_err(|e| e.to_string())
+        let s = toml::to_string_pretty(&task.data)
+            .with_context(|| format!("Failed to save task: {}", task.id))?;
+        fs::write(f, s).with_context(|| format!("Failed to save task: {}", task.id))
     }
 }
 

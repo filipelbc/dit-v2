@@ -1,4 +1,4 @@
-use log::{LevelFilter, Metadata, Record};
+use log::{Level, LevelFilter, Metadata, Record};
 
 struct Logger;
 
@@ -8,7 +8,9 @@ impl log::Log for Logger {
     }
 
     fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
+        if record.level() == Level::Error {
+            eprintln!("Error: {}", record.args())
+        } else {
             println!("{}", record.args());
         }
     }

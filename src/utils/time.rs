@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, Local, TimeZone};
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
@@ -17,18 +18,18 @@ lazy_static! {
 
 pub type LocalDateTime = DateTime<Local>;
 
-pub fn resolve(at: Option<&str>) -> Result<LocalDateTime, String> {
+pub fn resolve(at: Option<&str>) -> Result<LocalDateTime> {
     match at {
         Some(x) => parse(x),
         None => Ok(Local::now()),
     }
 }
 
-fn parse(x: &str) -> Result<LocalDateTime, String> {
-    match try_datetime(x).or(try_time(x)).or(try_delta(x)) {
-        Some(d) => Ok(d),
-        None => Err(format!("Invalid date/time value: {}", x)),
-    }
+fn parse(x: &str) -> Result<LocalDateTime> {
+    try_datetime(x)
+        .or(try_time(x))
+        .or(try_delta(x))
+        .with_context(|| format!("Invalid date/time value: {}", x))
 }
 
 fn try_datetime(x: &str) -> Option<LocalDateTime> {

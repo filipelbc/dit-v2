@@ -1,3 +1,4 @@
+use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -35,7 +36,7 @@ pub trait Repository {
     fn new(directory: PathBuf) -> Self;
     fn resolve_key(&self, key: &str) -> String;
     fn exists(&self, id: &String) -> bool;
-    fn save(&self, task: &Task) -> Result<(), String>;
+    fn save(&self, task: &Task) -> Result<()>;
 }
 
 lazy_static! {
