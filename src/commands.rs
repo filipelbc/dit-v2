@@ -3,6 +3,7 @@ use log::info;
 
 use crate::models::{Repository, Task};
 use crate::repository::toml::Repo;
+use crate::utils::input::prompt;
 use crate::utils::time::LocalDateTime;
 
 pub struct Dit {
@@ -21,9 +22,15 @@ impl Dit {
             bail!("Task already exists: {}", id);
         }
 
-        let task = Task::new(id);
+        let mut task = Task::new(id);
 
-        self.repo.save(&task)
+        task.data.title = match title {
+            Some(t) => t.to_string(),
+            None => prompt("Title")?,
+        };
+
+        self.repo
+            .save(&task)
             .map(|()| info!("Created: {}", task.id))
     }
 
@@ -34,7 +41,8 @@ impl Dit {
             bail!("Task does not exist: {}", id);
         }
 
-        self.repo.clock_in(&id, now)
+        self.repo
+            .clock_in(&id, now)
             .map(|()| info!("Working on: {}", id))
     }
 

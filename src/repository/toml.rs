@@ -18,7 +18,7 @@ impl Repository for Repo {
     }
 
     fn resolve_key(&self, key: &str) -> String {
-        String::from(key)
+        key.to_string()
     }
 
     fn exists(&self, id: &String) -> bool {

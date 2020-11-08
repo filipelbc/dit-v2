@@ -29,7 +29,7 @@ impl Task {
         Task {
             id,
             data: TaskData {
-                title: String::from("Fixme"),
+                title: String::new(),
                 log: Vec::new(),
             },
         }
@@ -42,7 +42,7 @@ impl Task {
     pub fn validate_key(key: &str) -> Result<(), String> {
         match TASK_KEY.is_match(key) {
             true => Ok(()),
-            false => Err(String::from(key)),
+            false => Err(key.to_string()),
         }
     }
 
