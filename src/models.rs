@@ -58,7 +58,6 @@ impl LogEntry {
 }
 
 pub trait Repository {
-    fn new(directory: PathBuf) -> Self;
     fn resolve_key(&self, key: &str) -> String;
     fn exists(&self, id: &String) -> bool;
     fn save(&self, task: &Task) -> Result<()>;

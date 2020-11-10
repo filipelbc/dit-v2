@@ -2,16 +2,15 @@ use anyhow::{bail, Result};
 use log::info;
 
 use crate::models::{Repository, Task};
-use crate::repository::toml::Repo;
 use crate::utils::input::prompt;
 use crate::utils::time::LocalDateTime;
 
 pub struct Dit {
-    pub repo: Repo,
+    pub repo: Box<dyn Repository>,
 }
 
 impl Dit {
-    pub fn new(repo: Repo) -> Self {
+    pub fn new(repo: Box<dyn Repository>) -> Self {
         Dit { repo }
     }
 

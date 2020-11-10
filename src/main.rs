@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use clap::ArgMatches;
 use log::debug;
 
@@ -6,7 +6,6 @@ mod utils;
 use crate::utils::graceful::Graceful;
 
 mod models;
-use crate::models::Repository;
 
 mod repository;
 use crate::repository::toml::Repo;
@@ -20,7 +19,8 @@ fn run(args: ArgMatches) -> Result<()> {
     let directory = utils::directory::resolve(args.value_of("directory"))?;
     debug!("Using data directory: {}", directory.display());
 
-    let dit = Dit::new(Repo::new(directory));
+    let repo = Repo::new(directory)?;
+    let dit = Dit::new(Box::new(repo));
 
     match args.subcommand() {
         Some(("new", cargs)) => dit.do_new(
