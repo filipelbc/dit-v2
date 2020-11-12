@@ -60,13 +60,12 @@ impl Repository for Repo {
 
     fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()> {
         let mut task = self.load(id)?;
-        if let Some(mut entry) = task.data.log.last_mut() {
-            if entry.end.is_some() {
-                bail!("Log entry already closed");
-            }
-            entry.end = Some(now);
-        } else {
-            bail!("No log entry found to close");
+        match task.data.log.last_mut() {
+            Some(entry) => match entry.end {
+                Some(_) => entry.end = Some(now),
+                None => bail!("Log entry already closed"),
+            },
+            None => bail!("No log entry found to close"),
         }
         self.save(&task)?;
         self.update_index(&task)
