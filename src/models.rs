@@ -2,7 +2,6 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 use crate::utils::time::LocalDateTime;
 
@@ -44,14 +43,6 @@ impl Task {
             true => Ok(()),
             false => Err(key.to_string()),
         }
-    }
-
-    pub fn add_log_entry(&mut self, entry: LogEntry) {
-        self.data.log.push(entry);
-    }
-
-    pub fn last_entry(&self) -> Option<&LogEntry> {
-        self.data.log.last()
     }
 }
 

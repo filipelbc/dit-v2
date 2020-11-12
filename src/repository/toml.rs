@@ -45,7 +45,7 @@ impl Repository for Repo {
 
     fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()> {
         let mut task = self.load(id)?;
-        task.add_log_entry(LogEntry::new(now));
+        task.data.log.push(LogEntry::new(now));
         self.save(&task)?;
         self.update_index(&task)
     }
@@ -88,7 +88,7 @@ impl Repo {
     }
 
     fn update_index(&self, task: &Task) -> Result<()> {
-        if let Some(entry) = task.last_entry() {
+        if let Some(entry) = task.data.log.last() {
             self.index
                 .borrow_mut()
                 .insert(task.id.clone(), entry.clone());
