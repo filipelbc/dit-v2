@@ -58,6 +58,7 @@ pub trait Repository {
     fn save(&self, task: &Task) -> Result<()>;
     fn load(&self, id: &String) -> Result<Task>;
     fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()>;
+    fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()>;
     fn is_clocked_in(&self) -> Option<String>;
 }
 

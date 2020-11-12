@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use log::{debug, trace};
 use serde::{de::DeserializeOwned, Serialize};
 use std::cell::RefCell;
@@ -56,6 +56,20 @@ impl Repository for Repo {
             .iter()
             .find(|&(_, v)| v.end.is_none())
             .map(|(k, _)| k.clone())
+    }
+
+    fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()> {
+        let mut task = self.load(id)?;
+        if let Some(mut entry) = task.data.log.last_mut() {
+            if entry.end.is_some() {
+                bail!("Log entry already closed");
+            }
+            entry.end = Some(now);
+        } else {
+            bail!("No log entry found to close");
+        }
+        self.save(&task)?;
+        self.update_index(&task)
     }
 }
 

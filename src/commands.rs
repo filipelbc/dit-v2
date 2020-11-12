@@ -50,7 +50,12 @@ impl Dit {
     }
 
     pub fn do_halt(&self, now: LocalDateTime) -> Result<()> {
-        bail!("Not implemented")
+        if let Some(id) = self.repo.is_clocked_in() {
+            return self.repo
+                .clock_out(&id, now)
+                .map(|()| info!("Halted: {}", id));
+        }
+        bail!("Not working on any task");
     }
 
     pub fn do_append(&self) -> Result<()> {
