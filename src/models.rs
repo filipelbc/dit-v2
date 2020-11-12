@@ -18,7 +18,7 @@ pub struct TaskData {
     pub log: Vec<LogEntry>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct LogEntry {
     pub start: LocalDateTime,
     pub end: Option<LocalDateTime>,
@@ -49,6 +49,10 @@ impl Task {
     pub fn add_log_entry(&mut self, entry: LogEntry) {
         self.data.log.push(entry);
     }
+
+    pub fn last_entry(&self) -> Option<&LogEntry> {
+        self.data.log.last()
+    }
 }
 
 impl LogEntry {
@@ -63,6 +67,7 @@ pub trait Repository {
     fn save(&self, task: &Task) -> Result<()>;
     fn load(&self, id: &String) -> Result<Task>;
     fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()>;
+    fn is_clocked_in(&self) -> Option<String>;
 }
 
 lazy_static! {

@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use log::{debug, trace};
 use serde::{de::DeserializeOwned, Serialize};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -12,7 +13,7 @@ use crate::utils::time::LocalDateTime;
 
 pub struct Repo {
     directory: PathBuf,
-    index: Index,
+    index: RefCell<Index>,
 }
 
 type Index = HashMap<String, LogEntry>;
@@ -45,23 +46,56 @@ impl Repository for Repo {
     fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()> {
         let mut task = self.load(id)?;
         task.add_log_entry(LogEntry::new(now));
-        self.save(&task)
+        self.save(&task)?;
+        self.update_index(&task)
+    }
+
+    fn is_clocked_in(&self) -> Option<String> {
+        self.index
+            .borrow()
+            .iter()
+            .find(|&(_, v)| v.end.is_none())
+            .map(|(k, _)| k.clone())
     }
 }
 
 impl Repo {
     pub fn new(directory: PathBuf) -> Result<Self> {
         let index = Repo::load_index(directory.as_path())?;
-        Ok(Repo { directory, index })
-    }
-
-    fn load_index(path: &Path) -> Result<Index> {
-        let s = path.join(".index");
-        read(&s)
+        Ok(Repo {
+            directory,
+            index: RefCell::new(index),
+        })
     }
 
     fn path(&self, id: &String) -> PathBuf {
         self.directory.join(id).with_extension("toml")
+    }
+
+    fn load_index(path: &Path) -> Result<Index> {
+        let s = path.join(".index");
+        if s.is_file() {
+            read(&s)
+        } else {
+            debug!("Index not found; using new, empty one");
+            Ok(Index::new())
+        }
+    }
+
+    fn save_index(&self) -> Result<()> {
+        let s = self.directory.join(".index");
+        write(&s, &self.index).context("Could not save index")
+    }
+
+    fn update_index(&self, task: &Task) -> Result<()> {
+        if let Some(entry) = task.last_entry() {
+            self.index
+                .borrow_mut()
+                .insert(task.id.clone(), entry.clone());
+        } else {
+            self.index.borrow_mut().remove(&task.id);
+        }
+        self.save_index()
     }
 }
 

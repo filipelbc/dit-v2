@@ -40,6 +40,10 @@ impl Dit {
             bail!("Task does not exist: {}", id);
         }
 
+        if let Some(task_id) = self.repo.is_clocked_in() {
+            bail!("Already clocked in: {}", task_id);
+        }
+
         self.repo
             .clock_in(&id, now)
             .map(|()| info!("Working on: {}", id))
