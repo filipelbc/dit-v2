@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use log::{debug, trace};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -16,7 +16,23 @@ pub struct Repo {
     index: RefCell<Index>,
 }
 
-type Index = HashMap<String, LogEntry>;
+#[derive(Serialize, Deserialize)]
+struct IndexEntry {
+    title: String,
+    #[serde(flatten)]
+    log_entry: LogEntry,
+}
+
+impl IndexEntry {
+    pub fn new(task: &Task, entry: &LogEntry) -> Self {
+        IndexEntry {
+            title: task.data.title.clone(),
+            log_entry: entry.clone(),
+        }
+    }
+}
+
+type Index = HashMap<String, IndexEntry>;
 
 impl Repository for Repo {
     fn resolve_key(&self, key: &str) -> String {
@@ -96,7 +112,7 @@ impl Repository for Repo {
         self.index
             .borrow()
             .iter()
-            .find(|&(_, v)| v.end.is_none())
+            .find(|&(_, v)| v.log_entry.is_open())
             .map(|(k, _)| k.clone())
     }
 
@@ -104,8 +120,8 @@ impl Repository for Repo {
         self.index
             .borrow()
             .iter()
-            .max_by(|&x, &y| x.1.cmp(y.1))
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .max_by(|&x, &y| x.1.log_entry.cmp(&y.1.log_entry))
+            .map(|(k, v)| (k.clone(), v.log_entry.clone()))
     }
 }
 
@@ -136,7 +152,7 @@ impl Repo {
     fn check_index(index: &Index) -> Result<()> {
         let c = index
             .values()
-            .fold(0, |a, i| if i.end.is_none() { a + 1 } else { a });
+            .fold(0, |a, i| if i.log_entry.is_open() { a + 1 } else { a });
 
         if c > 1 {
             bail!("Index contains more than one active task; rebuild index?");
@@ -153,7 +169,7 @@ impl Repo {
         if let Some(entry) = task.data.log.last() {
             self.index
                 .borrow_mut()
-                .insert(task.id.clone(), entry.clone());
+                .insert(task.id.clone(), IndexEntry::new(task, entry));
         } else {
             self.index.borrow_mut().remove(&task.id);
         }
