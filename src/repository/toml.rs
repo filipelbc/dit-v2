@@ -112,7 +112,7 @@ impl Repository for Repo {
         self.index
             .borrow()
             .iter()
-            .find(|&(_, v)| v.log_entry.is_open())
+            .find(|(_, v)| v.log_entry.is_open())
             .map(|(k, _)| k.clone())
     }
 
@@ -120,7 +120,7 @@ impl Repository for Repo {
         self.index
             .borrow()
             .iter()
-            .max_by(|&x, &y| x.1.log_entry.cmp(&y.1.log_entry))
+            .max_by(|x, y| x.1.log_entry.cmp(&y.1.log_entry))
             .map(|(k, v)| (k.clone(), v.log_entry.clone()))
     }
 }
