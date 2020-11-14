@@ -60,7 +60,7 @@ impl Dit {
 
     pub fn do_append(&self) -> Result<()> {
         if let Some((id, entry)) = self.repo.current_task() {
-            if entry.end.is_some() {
+            if entry.is_closed() {
                 return self.repo.un_clock_out(&id)
                     .map(|()| info!("Appending to: {}", id));
             }
@@ -80,7 +80,7 @@ impl Dit {
 
     pub fn do_resume(&self, now: LocalDateTime) -> Result<()> {
         if let Some((id, entry)) = self.repo.current_task() {
-            if entry.end.is_some() {
+            if entry.is_closed() {
                 return self.repo.clock_in(&id, now)
                     .map(|()| info!("Resuming: {}", id));
             }

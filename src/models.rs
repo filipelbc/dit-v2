@@ -51,6 +51,14 @@ impl LogEntry {
     pub fn new(start: LocalDateTime) -> LogEntry {
         LogEntry { start, end: None }
     }
+
+    pub fn is_open(&self) -> bool {
+        self.end.is_none()
+    }
+
+    pub fn is_closed(&self) -> bool {
+        self.end.is_some()
+    }
 }
 
 pub trait Repository {
