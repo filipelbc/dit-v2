@@ -79,7 +79,14 @@ impl Dit {
     }
 
     pub fn do_resume(&self, now: LocalDateTime) -> Result<()> {
-        bail!("Not implemented")
+        if let Some((id, entry)) = self.repo.current_task() {
+            if entry.end.is_some() {
+                return self.repo.clock_in(&id, now)
+                    .map(|()| info!("Resuming: {}", id));
+            }
+            bail!("Already working on: {}", id);
+        }
+        bail!("No previous task to resume; rebuild index?")
     }
 
     pub fn do_switch_back(&self, now: LocalDateTime) -> Result<()> {
