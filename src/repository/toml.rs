@@ -78,6 +78,7 @@ impl Repository for Repo {
 impl Repo {
     pub fn new(directory: PathBuf) -> Result<Self> {
         let index = Repo::load_index(directory.as_path())?;
+        Repo::check_index(&index)?;
         Ok(Repo {
             directory,
             index: RefCell::new(index),
@@ -96,6 +97,17 @@ impl Repo {
             debug!("Index not found; using new, empty one");
             Ok(Index::new())
         }
+    }
+
+    fn check_index(index: &Index) -> Result<()> {
+        let c = index
+            .values()
+            .fold(0, |a, i| if i.end.is_none() { a + 1 } else { a });
+
+        if c > 1 {
+            bail!("Index contains more than one active task; try rebuilding it");
+        }
+        Ok(())
     }
 
     fn save_index(&self) -> Result<()> {
