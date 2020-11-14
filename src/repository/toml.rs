@@ -139,7 +139,7 @@ impl Repo {
             .fold(0, |a, i| if i.end.is_none() { a + 1 } else { a });
 
         if c > 1 {
-            bail!("Index contains more than one active task; try rebuilding it");
+            bail!("Index contains more than one active task; rebuild index?");
         }
         Ok(())
     }
