@@ -38,7 +38,10 @@ impl Repository for Repo {
         debug!("Loading task: {}", id);
 
         let f = self.path(&id);
-        let data: TaskData = read(&f).with_context(|| format!("Could not load task: {}", id))?;
+        let mut data: TaskData =
+            read(&f).with_context(|| format!("Could not load task: {}", id))?;
+
+        data.log.sort();
 
         Ok(Task::from_data(id.clone(), data))
     }

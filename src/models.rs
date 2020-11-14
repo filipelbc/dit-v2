@@ -2,6 +2,7 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 
 use crate::utils::time::LocalDateTime;
 
@@ -17,7 +18,7 @@ pub struct TaskData {
     pub log: Vec<LogEntry>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Eq)]
 pub struct LogEntry {
     pub start: LocalDateTime,
     pub end: Option<LocalDateTime>,
@@ -60,6 +61,24 @@ pub trait Repository {
     fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()>;
     fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()>;
     fn is_clocked_in(&self) -> Option<String>;
+}
+
+impl Ord for LogEntry {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.start.cmp(&other.start)
+    }
+}
+
+impl PartialOrd for LogEntry {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for LogEntry {
+    fn eq(&self, other: &Self) -> bool {
+        self.start == other.start
+    }
 }
 
 lazy_static! {
