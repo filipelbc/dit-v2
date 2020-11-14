@@ -41,7 +41,7 @@ impl Dit {
         }
 
         if let Some(task_id) = self.repo.is_clocked_in() {
-            bail!("Already clocked in: {}", task_id);
+            bail!("Already working on: {}", task_id);
         }
 
         self.repo
@@ -59,11 +59,23 @@ impl Dit {
     }
 
     pub fn do_append(&self) -> Result<()> {
-        bail!("Not implemented")
+        if let Some((id, entry)) = self.repo.current_task() {
+            if entry.end.is_some() {
+                return self.repo.un_clock_out(&id)
+                    .map(|()| info!("Appending to: {}", id));
+            }
+            bail!("Already working on: {}", id);
+        }
+        bail!("No previous task to append to; rebuild index?")
     }
 
     pub fn do_cancel(&self) -> Result<()> {
-        bail!("Not implemented")
+        if let Some(id) = self.repo.is_clocked_in() {
+            return self.repo
+                .un_clock_in(&id)
+                .map(|()| info!("Canceled: {}", id));
+        }
+        bail!("Not working on any task");
     }
 
     pub fn do_resume(&self, now: LocalDateTime) -> Result<()> {

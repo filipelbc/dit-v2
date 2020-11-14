@@ -60,7 +60,10 @@ pub trait Repository {
     fn load(&self, id: &String) -> Result<Task>;
     fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()>;
     fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()>;
+    fn un_clock_in(&self, id: &String) -> Result<()>;
+    fn un_clock_out(&self, id: &String) -> Result<()>;
     fn is_clocked_in(&self) -> Option<String>;
+    fn current_task(&self) -> Option<(String, LogEntry)>;
 }
 
 impl Ord for LogEntry {

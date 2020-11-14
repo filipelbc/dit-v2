@@ -53,14 +53,6 @@ impl Repository for Repo {
         self.update_index(&task)
     }
 
-    fn is_clocked_in(&self) -> Option<String> {
-        self.index
-            .borrow()
-            .iter()
-            .find(|&(_, v)| v.end.is_none())
-            .map(|(k, _)| k.clone())
-    }
-
     fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()> {
         let mut task = self.load(id)?;
         match task.data.log.last_mut() {
@@ -69,9 +61,51 @@ impl Repository for Repo {
                 None => entry.end = Some(now),
             },
             None => bail!("No log entry found to close"),
-        }
+        };
         self.save(&task)?;
         self.update_index(&task)
+    }
+
+    fn un_clock_in(&self, id: &String) -> Result<()> {
+        let mut task = self.load(id)?;
+        match task.data.log.last() {
+            Some(entry) => match entry.end {
+                Some(_) => bail!("Log entry already closed"),
+                None => task.data.log.pop(),
+            },
+            None => bail!("No log entry found to close"),
+        };
+        self.save(&task)?;
+        self.update_index(&task)
+    }
+
+    fn un_clock_out(&self, id: &String) -> Result<()> {
+        let mut task = self.load(id)?;
+        match task.data.log.last_mut() {
+            Some(entry) => match entry.end {
+                Some(_) => entry.end = None,
+                None => bail!("Log entry already open"),
+            },
+            None => bail!("No log entry found to close"),
+        };
+        self.save(&task)?;
+        self.update_index(&task)
+    }
+
+    fn is_clocked_in(&self) -> Option<String> {
+        self.index
+            .borrow()
+            .iter()
+            .find(|&(_, v)| v.end.is_none())
+            .map(|(k, _)| k.clone())
+    }
+
+    fn current_task(&self) -> Option<(String, LogEntry)> {
+        self.index
+            .borrow()
+            .iter()
+            .max_by(|&x, &y| x.1.cmp(y.1))
+            .map(|(k, v)| (k.clone(), v.clone()))
     }
 }
 
