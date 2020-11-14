@@ -24,6 +24,12 @@ pub struct LogEntry {
     pub end: Option<LocalDateTime>,
 }
 
+pub struct Status {
+    pub id: String,
+    pub title: String,
+    pub log_entry: LogEntry,
+}
+
 impl Task {
     pub fn new(id: String) -> Task {
         Task {
@@ -72,6 +78,7 @@ pub trait Repository {
     fn un_clock_out(&self, id: &String) -> Result<()>;
     fn is_clocked_in(&self) -> Option<String>;
     fn current_task(&self) -> Option<(String, LogEntry)>;
+    fn get_status(&self, limit: usize) -> Vec<Status>;
 }
 
 impl Ord for LogEntry {

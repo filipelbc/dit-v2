@@ -7,7 +7,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use toml;
 
-use crate::models::{LogEntry, Repository, Task, TaskData};
+use crate::models::{LogEntry, Repository, Status, Task, TaskData};
 use crate::utils::directory;
 use crate::utils::time::LocalDateTime;
 
@@ -28,6 +28,14 @@ impl IndexEntry {
         IndexEntry {
             title: task.data.title.clone(),
             log_entry: entry.clone(),
+        }
+    }
+
+    pub fn to_status(&self, id: &String) -> Status {
+        Status {
+            id: id.clone(),
+            title: self.title.clone(),
+            log_entry: self.log_entry.clone(),
         }
     }
 }
@@ -122,6 +130,21 @@ impl Repository for Repo {
             .iter()
             .max_by(|x, y| x.1.log_entry.cmp(&y.1.log_entry))
             .map(|(k, v)| (k.clone(), v.log_entry.clone()))
+    }
+
+    fn get_status(&self, limit: usize) -> Vec<Status> {
+        let mut status: Vec<Status> = self
+            .index
+            .borrow()
+            .iter()
+            .map(|(k, v)| v.to_status(k))
+            .collect();
+
+        status.sort_unstable_by(|x, y| y.log_entry.cmp(&x.log_entry));
+        if limit > 0 {
+            status.truncate(limit);
+        }
+        status
     }
 }
 

@@ -92,4 +92,9 @@ impl Dit {
     pub fn do_switch_back(&self, now: LocalDateTime) -> Result<()> {
         bail!("Not implemented")
     }
+
+    pub fn do_status(&self, limit: usize) -> Result<()> {
+        let status = self.repo.get_status(limit);
+        Ok(())
+    }
 }

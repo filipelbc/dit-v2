@@ -146,5 +146,18 @@ pub fn parse() -> ArgMatches {
             .about("Stops clocking on the CURRENT task, and starts clocking on the PREVIOUS task. Same as 'halt' followed by 'work-on PREVIOUS'.")
             .arg(at_arg())
         )
+        .subcommand(
+            new_app("status")
+            .visible_alias("t")
+            .about("Print the most tasks")
+            .arg(
+                Arg::new("l")
+                    .about("Limit listing to last NUM tasks.")
+                    .value_name("NUM")
+                    .long("limit")
+                    .short('n')
+                    .default_value("0")
+            )
+        )
         .get_matches()
 }

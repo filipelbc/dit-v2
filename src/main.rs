@@ -67,6 +67,10 @@ fn run(args: ArgMatches) -> Result<()> {
 
             dit.do_switch_back(now)
         }
+        Some(("status", cargs)) => {
+            let limit = utils::cli::parse_usize(cargs.value_of("limit").unwrap_or("0"))?;
+            dit.do_status(limit)
+        }
         Some((cmd, _)) => bail!("Unhandled subcommand: {}", cmd),
         None => bail!("No subcommand provided"),
     }
