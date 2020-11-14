@@ -62,8 +62,8 @@ impl Repository for Repo {
         let mut task = self.load(id)?;
         match task.data.log.last_mut() {
             Some(entry) => match entry.end {
-                Some(_) => entry.end = Some(now),
-                None => bail!("Log entry already closed"),
+                Some(_) => bail!("Log entry already closed"),
+                None => entry.end = Some(now),
             },
             None => bail!("No log entry found to close"),
         }
