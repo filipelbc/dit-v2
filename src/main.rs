@@ -4,6 +4,7 @@ use log::debug;
 
 mod utils;
 use crate::utils::graceful::Graceful;
+use crate::utils::parse::parse_usize;
 
 mod models;
 
@@ -68,7 +69,7 @@ fn run(args: ArgMatches) -> Result<()> {
             dit.do_switch_back(now)
         }
         Some(("status", cargs)) => {
-            let limit = utils::cli::parse_usize(cargs.value_of("limit").unwrap_or("0"))?;
+            let limit = parse_usize(cargs.value_of("limit").unwrap_or("0"))?;
             dit.do_status(limit)
         }
         Some((cmd, _)) => bail!("Unhandled subcommand: {}", cmd),
