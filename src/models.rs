@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::{Duration, Local};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -64,6 +65,20 @@ impl LogEntry {
 
     pub fn is_closed(&self) -> bool {
         self.end.is_some()
+    }
+}
+
+impl Status {
+    pub fn start(&self) -> LocalDateTime {
+        self.log_entry.start
+    }
+
+    pub fn end(&self) -> LocalDateTime {
+        self.log_entry.end.unwrap_or_else(|| Local::now())
+    }
+
+    pub fn duration(&self) -> Duration {
+        self.end() - self.start()
     }
 }
 
