@@ -54,7 +54,8 @@ impl Dit {
 
     pub fn do_halt(&self, now: LocalDateTime) -> Result<()> {
         if let Some(id) = self.repo.is_clocked_in() {
-            return self.repo
+            return self
+                .repo
                 .clock_out(&id, now)
                 .map(|()| info!("Halted: {}", id));
         }
@@ -64,7 +65,9 @@ impl Dit {
     pub fn do_append(&self) -> Result<()> {
         if let Some((id, entry)) = self.repo.current_task() {
             if entry.is_closed() {
-                return self.repo.un_clock_out(&id)
+                return self
+                    .repo
+                    .un_clock_out(&id)
                     .map(|()| info!("Appending to: {}", id));
             }
             bail!("Already working on: {}", id);
@@ -74,7 +77,8 @@ impl Dit {
 
     pub fn do_cancel(&self) -> Result<()> {
         if let Some(id) = self.repo.is_clocked_in() {
-            return self.repo
+            return self
+                .repo
                 .un_clock_in(&id)
                 .map(|()| info!("Canceled: {}", id));
         }
@@ -84,7 +88,9 @@ impl Dit {
     pub fn do_resume(&self, now: LocalDateTime) -> Result<()> {
         if let Some((id, entry)) = self.repo.current_task() {
             if entry.is_closed() {
-                return self.repo.clock_in(&id, now)
+                return self
+                    .repo
+                    .clock_in(&id, now)
                     .map(|()| info!("Resuming: {}", id));
             }
             bail!("Already working on: {}", id);
