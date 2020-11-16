@@ -1,9 +1,12 @@
 use anyhow::{bail, Result};
 use log::info;
 
-use crate::models::{Repository, Task};
+use crate::models::{Repository, Status, Task};
 use crate::utils::input::prompt;
+use crate::utils::tables::{Column, Table};
 use crate::utils::time::LocalDateTime;
+#[macro_use]
+use crate::table;
 
 pub struct Dit {
     pub repo: Box<dyn Repository>,
@@ -95,6 +98,16 @@ impl Dit {
 
     pub fn do_status(&self, limit: usize) -> Result<()> {
         let status = self.repo.get_status(limit);
+
+        let t = table![
+            |x: &Status| x.start().to_string(),
+            |x: &Status| x.end().to_string(),
+            |x: &Status| x.duration().to_string(),
+            |x: &Status| x.id.to_string(),
+            |x: &Status| x.title.to_string(),
+        ];
+        t.print(&status);
+
         Ok(())
     }
 }
