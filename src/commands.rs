@@ -4,7 +4,7 @@ use log::info;
 use crate::models::{Repository, Status, Task};
 use crate::utils::input::prompt;
 use crate::utils::tables::{Column, Table};
-use crate::utils::time::LocalDateTime;
+use crate::utils::time::{LocalDateTime, format_duration, format_localdatetime};
 #[macro_use]
 use crate::table;
 
@@ -106,9 +106,10 @@ impl Dit {
         let status = self.repo.get_status(limit);
 
         let t = table![
-            |x: &Status| x.start().to_string(),
-            |x: &Status| x.end().to_string(),
-            |x: &Status| x.duration().to_string(),
+            |x: &Status| format_localdatetime(&x.start()),
+            |x: &Status| format_localdatetime(&x.end()),
+            |x: &Status| format_duration(&x.duration()),
+            |x: &Status| format_duration(&x.time_spent),
             |x: &Status| x.id.to_string(),
             |x: &Status| x.title.to_string(),
         ];
