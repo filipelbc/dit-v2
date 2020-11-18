@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use chrono::{DateTime, Duration, Local, TimeZone};
+use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone};
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
@@ -18,12 +18,16 @@ lazy_static! {
 
 const TIMESTAMP_FORMAT: &str = "%F %T %z";
 
-pub type Timestamp = DateTime<Local>;
+pub type Timestamp = DateTime<FixedOffset>;
+
+pub fn now() -> Timestamp {
+    local_to_fixed(Local::now())
+}
 
 pub fn resolve(at: Option<&str>) -> Result<Timestamp> {
     match at {
         Some(x) => parse_timestamp(x).with_context(|| format!("Invalid date/time value: {}", x)),
-        None => Ok(Local::now()),
+        None => Ok(now()),
     }
 }
 
@@ -49,6 +53,10 @@ pub fn format_duration(x: &Duration) -> String {
     )
 }
 
+fn local_to_fixed(local_date_time: DateTime<Local>) -> DateTime<FixedOffset> {
+    local_date_time.with_timezone(local_date_time.offset())
+}
+
 fn format_duration_piece(x: i64, suffix: &str) -> String {
     if x == 0 {
         "".to_string()
@@ -69,21 +77,29 @@ fn parse_duration(x: &str) -> Option<Duration> {
 }
 
 fn try_timestamp(x: &str) -> Option<Timestamp> {
-    TIMESTAMP_RE.captures(x).map(|m| {
-        Local
-            .ymd(i(&m, "y"), u(&m, "m"), u(&m, "d"))
-            .and_hms(u(&m, "h"), u(&m, "min"), u(&m, "s"))
-    })
+    TIMESTAMP_RE
+        .captures(x)
+        .map(|m| {
+            Local.ymd(i(&m, "y"), u(&m, "m"), u(&m, "d")).and_hms(
+                u(&m, "h"),
+                u(&m, "min"),
+                u(&m, "s"),
+            )
+        })
+        .map(local_to_fixed)
 }
 
 fn try_time(x: &str) -> Option<Timestamp> {
     TIME_RE
         .captures(x)
         .map(|m| Local::today().and_hms(u(&m, "h"), u(&m, "min"), u(&m, "s")))
+        .map(local_to_fixed)
 }
 
 fn try_duration(x: &str) -> Option<Timestamp> {
-    parse_duration(x).map(|d| Local::now() + d)
+    parse_duration(x)
+        .map(|d| Local::now() + d)
+        .map(local_to_fixed)
 }
 
 fn i(x: &Captures, n: &str) -> i32 {
@@ -100,7 +116,7 @@ fn u(x: &Captures, n: &str) -> u32 {
 
 pub mod timestamp {
 
-    use chrono::{DateTime, Local};
+    use chrono::DateTime;
     use serde::{de::Error, Deserialize, Deserializer, Serializer};
 
     use super::{format_timestamp, Timestamp, TIMESTAMP_FORMAT};
@@ -112,7 +128,6 @@ pub mod timestamp {
         let s = String::deserialize(deserializer)?;
         DateTime::parse_from_str(s.as_str(), TIMESTAMP_FORMAT)
             .map_err(|e| D::Error::custom(format!("Invalid datetime: {}", e)))
-            .map(|x| x.with_timezone(&Local))
     }
 
     pub fn serialize<S>(value: &Timestamp, serializer: S) -> Result<S::Ok, S::Error>

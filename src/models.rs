@@ -1,11 +1,11 @@
 use anyhow::Result;
-use chrono::{Duration, Local};
+use chrono::Duration;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-use crate::utils::time::Timestamp;
+use crate::utils::time::{now, Timestamp};
 
 pub struct Task {
     pub id: String,
@@ -78,7 +78,7 @@ impl Status {
     }
 
     pub fn end(&self) -> Timestamp {
-        self.log_entry.end.unwrap_or_else(|| Local::now())
+        self.log_entry.end.unwrap_or_else(|| now())
     }
 
     pub fn duration(&self) -> Duration {
