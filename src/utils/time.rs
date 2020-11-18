@@ -10,7 +10,7 @@ lazy_static! {
     .unwrap();
     static ref TIME_RE: Regex =
         Regex::new(r"^(?P<h>\d{1,2}):(?P<min>\d{2})(:(?P<s>\d{2}))?$").unwrap();
-    static ref DELTA_RE: Regex = Regex::new(
+    static ref DURATION_RE: Regex = Regex::new(
         r"^((?P<d>[+-]?\d+)d)?((?P<h>[+-]?\d+)h)?((?P<min>[+-]?\d+)min)?((?P<s>[+-]?\d+)s)?$"
     )
     .unwrap();
@@ -20,16 +20,41 @@ pub type LocalDateTime = DateTime<Local>;
 
 pub fn resolve(at: Option<&str>) -> Result<LocalDateTime> {
     match at {
-        Some(x) => parse(x),
+        Some(x) => parse_datetime(x).with_context(|| format!("Invalid date/time value: {}", x)),
         None => Ok(Local::now()),
     }
 }
 
-fn parse(x: &str) -> Result<LocalDateTime> {
-    try_datetime(x)
-        .or(try_time(x))
-        .or(try_delta(x))
-        .with_context(|| format!("Invalid date/time value: {}", x))
+pub fn format_duration(x: &Duration) -> String {
+    let mut r = x.num_seconds();
+    let hours = r / 3600;
+    r %= 3600;
+
+    format!(
+        "{}{}{}",
+        format_duration_piece(hours, "h"),
+        format_duration_piece(r / 60, "min"),
+        format_duration_piece(r % 60, "s"),
+    )
+}
+
+fn format_duration_piece(x: i64, suffix: &str) -> String {
+    if x == 0 {
+        "".to_string()
+    } else {
+        format!("{}{}", x, suffix)
+    }
+}
+
+fn parse_datetime(x: &str) -> Option<LocalDateTime> {
+    try_datetime(x).or(try_time(x)).or(try_duration(x))
+}
+
+fn parse_duration(x: &str) -> Option<Duration> {
+    DURATION_RE.captures(x).map(|m| {
+        let s = i(&m, "h") * 3600 + i(&m, "min") * 60 + i(&m, "s");
+        Duration::seconds(i64::from(s))
+    })
 }
 
 fn try_datetime(x: &str) -> Option<LocalDateTime> {
@@ -46,11 +71,8 @@ fn try_time(x: &str) -> Option<LocalDateTime> {
         .map(|m| Local::today().and_hms(u(&m, "h"), u(&m, "min"), u(&m, "s")))
 }
 
-fn try_delta(x: &str) -> Option<LocalDateTime> {
-    DELTA_RE.captures(x).map(|m| {
-        let s = i(&m, "h") * 3600 + i(&m, "min") * 60 + i(&m, "s");
-        Local::now() + Duration::seconds(i64::from(s))
-    })
+fn try_duration(x: &str) -> Option<LocalDateTime> {
+    parse_duration(x).map(|d| Local::now() + d)
 }
 
 fn i(x: &Captures, n: &str) -> i32 {
@@ -68,15 +90,14 @@ fn u(x: &Captures, n: &str) -> u32 {
 #[cfg(test)]
 mod tests {
 
-    use super::parse;
+    use super::parse_datetime;
 
     macro_rules! assert_parses {
         ($expr:expr) => {{
-            if let Err(e) = parse($expr) {
+            if let None = parse_datetime($expr) {
                 panic!(
-                    "assertion failed: parse({}) should be Ok(_) but is Err({:?})",
+                    "assertion failed: parse_datetime({}) should be Some(_) but is None",
                     stringify!($expr),
-                    e,
                 );
             }
         }};
@@ -84,18 +105,18 @@ mod tests {
 
     macro_rules! assert_parses_not {
         ($expr:expr) => {{
-            if let Ok(e) = parse($expr) {
+            if let Some(x) = parse_datetime($expr) {
                 panic!(
-                    "assertion failed: parse({}) should be Err(_) but is Ok({:?})",
+                    "assertion failed: parse_datetime({}) should be None but is Some({})",
                     stringify!($expr),
-                    e,
+                    x,
                 );
             }
         }};
     }
 
     #[test]
-    fn test_parse() {
+    fn test_parse_datetime() {
         assert_parses!("1:22");
         assert_parses!("11:22");
         assert_parses!("11:22:33");
