@@ -78,7 +78,6 @@ mod test {
         let table = table![
             |x: &Foo| x.a.to_string(),
             |x: &Foo| x.b.to_string(),
-            |x: &Foo| x.c.to_string(),
         ];
 
         let data = vec![
