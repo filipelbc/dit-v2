@@ -16,6 +16,8 @@ lazy_static! {
     .unwrap();
 }
 
+const LOCALDATETIME_FORMAT: &str = "%F %T %z";
+
 pub type LocalDateTime = DateTime<Local>;
 
 pub fn resolve(at: Option<&str>) -> Result<LocalDateTime> {
@@ -23,6 +25,10 @@ pub fn resolve(at: Option<&str>) -> Result<LocalDateTime> {
         Some(x) => parse_datetime(x).with_context(|| format!("Invalid date/time value: {}", x)),
         None => Ok(Local::now()),
     }
+}
+
+pub fn format_localdatetime(x: &LocalDateTime) -> String {
+    x.format(LOCALDATETIME_FORMAT).to_string()
 }
 
 pub fn format_duration(x: &Duration) -> String {
@@ -90,6 +96,54 @@ fn u(x: &Captures, n: &str) -> u32 {
     x.name(n)
         .map(|m| u32::from_str_radix(m.as_str(), 10).unwrap())
         .unwrap_or(0)
+}
+
+pub mod localdatetime {
+
+    use chrono::{DateTime, Local};
+    use serde::{de::Error, Deserialize, Deserializer, Serializer};
+
+    use super::{format_localdatetime, LocalDateTime, LOCALDATETIME_FORMAT};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<LocalDateTime, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        DateTime::parse_from_str(s.as_str(), LOCALDATETIME_FORMAT)
+            .map_err(|e| D::Error::custom(format!("Invalid datetime: {}", e)))
+            .map(|x| x.with_timezone(&Local))
+    }
+
+    pub fn serialize<S>(value: &LocalDateTime, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(format_localdatetime(value).as_str())
+    }
+
+    pub mod optional {
+        use serde::{Deserializer, Serializer};
+
+        use super::super::LocalDateTime;
+
+        pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<LocalDateTime>, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            super::deserialize(deserializer).map(|x| Some(x))
+        }
+
+        pub fn serialize<S>(value: &Option<LocalDateTime>, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            match value {
+                Some(x) => super::serialize(x, serializer),
+                None => serializer.serialize_none(),
+            }
+        }
+    }
 }
 
 pub mod duration {
