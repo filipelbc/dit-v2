@@ -37,6 +37,7 @@ fn at_arg<'a>() -> Arg<'a> {
         .value_name("DATETIME")
         .long("at")
         .short('a')
+        .allow_hyphen_values(true)
 }
 
 fn new_app<'a>(name: &str) -> App<'a> {
