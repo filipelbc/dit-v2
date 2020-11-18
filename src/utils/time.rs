@@ -87,6 +87,30 @@ fn u(x: &Captures, n: &str) -> u32 {
         .unwrap_or(0)
 }
 
+pub mod duration {
+
+    use chrono::Duration;
+    use serde::{de::Error, Deserialize, Deserializer, Serializer};
+
+    use super::{format_duration, parse_duration};
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        parse_duration(s.as_str())
+            .ok_or_else(|| D::Error::custom(format!("Invalid duration: {}", s)))
+    }
+
+    pub fn serialize<S>(value: &Duration, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(format_duration(value).as_str())
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
