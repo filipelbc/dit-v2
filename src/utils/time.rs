@@ -27,6 +27,11 @@ pub fn resolve(at: Option<&str>) -> Result<LocalDateTime> {
 
 pub fn format_duration(x: &Duration) -> String {
     let mut r = x.num_seconds();
+
+    if r == 0 {
+        return "0s".to_string();
+    }
+
     let hours = r / 3600;
     r %= 3600;
 
