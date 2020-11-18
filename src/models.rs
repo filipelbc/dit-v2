@@ -29,6 +29,7 @@ pub struct Status {
     pub id: String,
     pub title: String,
     pub log_entry: LogEntry,
+    pub time_spent: Duration,
 }
 
 impl Task {
