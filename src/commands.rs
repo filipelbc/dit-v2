@@ -4,7 +4,7 @@ use log::info;
 use crate::models::{Repository, Status, Task};
 use crate::utils::input::prompt;
 use crate::utils::tables::{Column, Table};
-use crate::utils::time::{LocalDateTime, format_duration, format_localdatetime};
+use crate::utils::time::{format_duration, format_localdatetime, LocalDateTime};
 #[macro_use]
 use crate::table;
 
