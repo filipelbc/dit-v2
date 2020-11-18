@@ -4,12 +4,13 @@ pub struct Table<R> {
 
 pub struct Column<R> {
     select: Box<dyn Fn(&R) -> String>,
+    name: String,
 }
 
 #[macro_export]
 macro_rules! table {
-    ($($x:expr),+ $(,)?) => {
-        Table::new(vec![$(Column::new($x),)+])
+    ($t:ty, $($n:expr, $x:expr),+ $(,)?) => {
+        Table::new(vec![$(Column::<$t>::new($n, $x),)+])
     };
 }
 
@@ -22,6 +23,20 @@ impl<R> Table<R> {
         let s_data = self.select(data);
 
         let widths = self.calc_widths(&s_data);
+
+        let c_names: Vec<String> = self
+            .columns
+            .iter()
+            .map(|c| &c.name)
+            .zip(&widths)
+            .map(|(r, w)| format!("{:<width$}", r, width = w))
+            .collect();
+        println!("| {} |", c_names.join(" | "));
+
+        let seps: Vec<String> = widths.iter()
+            .map(|w| format!("{:-<width$}", "", width = w + 2))
+            .collect();
+        println!("|{}|", seps.join("+"));
 
         for r in s_data.iter() {
             let row: Vec<String> = r
@@ -40,21 +55,28 @@ impl<R> Table<R> {
     }
 
     fn calc_widths(&self, s_data: &Vec<Vec<String>>) -> Vec<usize> {
+        let w: Vec<usize> = self.columns.iter().map(|c| c.name.len()).collect();
+
         self.columns
             .iter()
             .enumerate()
-            .map(|(i, _)| s_data.iter().fold(0, |a, x| std::cmp::max(x[i].len(), a)))
+            .map(|(i, _)| {
+                s_data
+                    .iter()
+                    .fold(w[i], |a, x| std::cmp::max(x[i].len(), a))
+            })
             .collect()
     }
 }
 
 impl<R> Column<R> {
-    pub fn new<F>(f: F) -> Self
+    pub fn new<F>(name: &str, f: F) -> Self
     where
         F: Fn(&R) -> String + 'static,
     {
         Column {
             select: Box::new(f),
+            name: name.to_string(),
         }
     }
 
@@ -75,24 +97,12 @@ mod test {
 
     #[test]
     fn test_table() {
-        let table = table![
-            |x: &Foo| x.a.to_string(),
-            |x: &Foo| x.b.to_string(),
-        ];
+        let table = table![Foo, "Foo", |x| x.a.to_string(), "B", |x| x.b.to_string(),];
 
         let data = vec![
-            Foo {
-                a: 12,
-                b: "foo",
-            },
-            Foo {
-                a: 32,
-                b: "barber",
-            },
-            Foo {
-                a: 53,
-                b: "bin",
-            },
+            Foo { a: 12, b: "foo" },
+            Foo { a: 32, b: "barber" },
+            Foo { a: 53, b: "bin" },
         ];
 
         table.print(&data);

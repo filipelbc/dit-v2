@@ -106,12 +106,19 @@ impl Dit {
         let status = self.repo.get_status(limit);
 
         let t = table![
-            |x: &Status| format_localdatetime(&x.start()),
-            |x: &Status| format_localdatetime(&x.end()),
-            |x: &Status| format_duration(&x.duration()),
-            |x: &Status| format_duration(&x.time_spent),
-            |x: &Status| x.id.to_string(),
-            |x: &Status| x.title.to_string(),
+            Status,
+            "Start",
+            |x| format_localdatetime(&x.start()),
+            "End",
+            |x| format_localdatetime(&x.end()),
+            "Effort",
+            |x| format_duration(&x.duration()),
+            "Total Effort",
+            |x| format_duration(&x.time_spent),
+            "Id",
+            |x| x.id.to_string(),
+            "Title",
+            |x| x.title.to_string(),
         ];
         t.print(&status);
 
