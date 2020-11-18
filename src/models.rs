@@ -21,7 +21,10 @@ pub struct TaskData {
 
 #[derive(Serialize, Deserialize, Clone, Eq)]
 pub struct LogEntry {
+    #[serde(with = "crate::utils::time::localdatetime")]
     pub start: LocalDateTime,
+    #[serde(default)]
+    #[serde(with = "crate::utils::time::localdatetime::optional")]
     pub end: Option<LocalDateTime>,
 }
 
