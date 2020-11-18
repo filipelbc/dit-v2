@@ -5,7 +5,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
-use crate::utils::time::LocalDateTime;
+use crate::utils::time::Timestamp;
 
 pub struct Task {
     pub id: String,
@@ -21,11 +21,11 @@ pub struct TaskData {
 
 #[derive(Serialize, Deserialize, Clone, Eq)]
 pub struct LogEntry {
-    #[serde(with = "crate::utils::time::localdatetime")]
-    pub start: LocalDateTime,
+    #[serde(with = "crate::utils::time::timestamp")]
+    pub start: Timestamp,
     #[serde(default)]
-    #[serde(with = "crate::utils::time::localdatetime::optional")]
-    pub end: Option<LocalDateTime>,
+    #[serde(with = "crate::utils::time::timestamp::optional")]
+    pub end: Option<Timestamp>,
 }
 
 pub struct Status {
@@ -59,7 +59,7 @@ impl Task {
 }
 
 impl LogEntry {
-    pub fn new(start: LocalDateTime) -> LogEntry {
+    pub fn new(start: Timestamp) -> LogEntry {
         LogEntry { start, end: None }
     }
 
@@ -73,11 +73,11 @@ impl LogEntry {
 }
 
 impl Status {
-    pub fn start(&self) -> LocalDateTime {
+    pub fn start(&self) -> Timestamp {
         self.log_entry.start
     }
 
-    pub fn end(&self) -> LocalDateTime {
+    pub fn end(&self) -> Timestamp {
         self.log_entry.end.unwrap_or_else(|| Local::now())
     }
 
@@ -91,8 +91,8 @@ pub trait Repository {
     fn exists(&self, id: &String) -> bool;
     fn save(&self, task: &Task) -> Result<()>;
     fn load(&self, id: &String) -> Result<Task>;
-    fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()>;
-    fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()>;
+    fn clock_in(&self, id: &String, now: Timestamp) -> Result<()>;
+    fn clock_out(&self, id: &String, now: Timestamp) -> Result<()>;
     fn un_clock_in(&self, id: &String) -> Result<()>;
     fn un_clock_out(&self, id: &String) -> Result<()>;
     fn is_clocked_in(&self) -> Option<String>;

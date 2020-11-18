@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
 lazy_static! {
-    static ref DATETIME_RE: Regex = Regex::new(
+    static ref TIMESTAMP_RE: Regex = Regex::new(
         r"^(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})-(?P<h>\d{1,2}):(?P<min>\d{2})(:(?P<s>\d{2}))?$"
     )
     .unwrap();
@@ -16,19 +16,19 @@ lazy_static! {
     .unwrap();
 }
 
-const LOCALDATETIME_FORMAT: &str = "%F %T %z";
+const TIMESTAMP_FORMAT: &str = "%F %T %z";
 
-pub type LocalDateTime = DateTime<Local>;
+pub type Timestamp = DateTime<Local>;
 
-pub fn resolve(at: Option<&str>) -> Result<LocalDateTime> {
+pub fn resolve(at: Option<&str>) -> Result<Timestamp> {
     match at {
-        Some(x) => parse_datetime(x).with_context(|| format!("Invalid date/time value: {}", x)),
+        Some(x) => parse_timestamp(x).with_context(|| format!("Invalid date/time value: {}", x)),
         None => Ok(Local::now()),
     }
 }
 
-pub fn format_localdatetime(x: &LocalDateTime) -> String {
-    x.format(LOCALDATETIME_FORMAT).to_string()
+pub fn format_timestamp(x: &Timestamp) -> String {
+    x.format(TIMESTAMP_FORMAT).to_string()
 }
 
 pub fn format_duration(x: &Duration) -> String {
@@ -57,8 +57,8 @@ fn format_duration_piece(x: i64, suffix: &str) -> String {
     }
 }
 
-fn parse_datetime(x: &str) -> Option<LocalDateTime> {
-    try_datetime(x).or(try_time(x)).or(try_duration(x))
+fn parse_timestamp(x: &str) -> Option<Timestamp> {
+    try_timestamp(x).or(try_time(x)).or(try_duration(x))
 }
 
 fn parse_duration(x: &str) -> Option<Duration> {
@@ -68,21 +68,21 @@ fn parse_duration(x: &str) -> Option<Duration> {
     })
 }
 
-fn try_datetime(x: &str) -> Option<LocalDateTime> {
-    DATETIME_RE.captures(x).map(|m| {
+fn try_timestamp(x: &str) -> Option<Timestamp> {
+    TIMESTAMP_RE.captures(x).map(|m| {
         Local
             .ymd(i(&m, "y"), u(&m, "m"), u(&m, "d"))
             .and_hms(u(&m, "h"), u(&m, "min"), u(&m, "s"))
     })
 }
 
-fn try_time(x: &str) -> Option<LocalDateTime> {
+fn try_time(x: &str) -> Option<Timestamp> {
     TIME_RE
         .captures(x)
         .map(|m| Local::today().and_hms(u(&m, "h"), u(&m, "min"), u(&m, "s")))
 }
 
-fn try_duration(x: &str) -> Option<LocalDateTime> {
+fn try_duration(x: &str) -> Option<Timestamp> {
     parse_duration(x).map(|d| Local::now() + d)
 }
 
@@ -98,43 +98,44 @@ fn u(x: &Captures, n: &str) -> u32 {
         .unwrap_or(0)
 }
 
-pub mod localdatetime {
+pub mod timestamp {
 
     use chrono::{DateTime, Local};
     use serde::{de::Error, Deserialize, Deserializer, Serializer};
 
-    use super::{format_localdatetime, LocalDateTime, LOCALDATETIME_FORMAT};
+    use super::{format_timestamp, Timestamp, TIMESTAMP_FORMAT};
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<LocalDateTime, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        DateTime::parse_from_str(s.as_str(), LOCALDATETIME_FORMAT)
+        DateTime::parse_from_str(s.as_str(), TIMESTAMP_FORMAT)
             .map_err(|e| D::Error::custom(format!("Invalid datetime: {}", e)))
             .map(|x| x.with_timezone(&Local))
     }
 
-    pub fn serialize<S>(value: &LocalDateTime, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(value: &Timestamp, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        serializer.serialize_str(format_localdatetime(value).as_str())
+        serializer.serialize_str(format_timestamp(value).as_str())
     }
 
     pub mod optional {
+
         use serde::{Deserializer, Serializer};
 
-        use super::super::LocalDateTime;
+        use super::super::Timestamp;
 
-        pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<LocalDateTime>, D::Error>
+        pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Timestamp>, D::Error>
         where
             D: Deserializer<'de>,
         {
             super::deserialize(deserializer).map(|x| Some(x))
         }
 
-        pub fn serialize<S>(value: &Option<LocalDateTime>, serializer: S) -> Result<S::Ok, S::Error>
+        pub fn serialize<S>(value: &Option<Timestamp>, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
         {
@@ -173,13 +174,13 @@ pub mod duration {
 #[cfg(test)]
 mod tests {
 
-    use super::parse_datetime;
+    use super::parse_timestamp;
 
     macro_rules! assert_parses {
         ($expr:expr) => {{
-            if let None = parse_datetime($expr) {
+            if let None = parse_timestamp($expr) {
                 panic!(
-                    "assertion failed: parse_datetime({}) should be Some(_) but is None",
+                    "assertion failed: parse_timestamp({}) should be Some(_) but is None",
                     stringify!($expr),
                 );
             }
@@ -188,9 +189,9 @@ mod tests {
 
     macro_rules! assert_parses_not {
         ($expr:expr) => {{
-            if let Some(x) = parse_datetime($expr) {
+            if let Some(x) = parse_timestamp($expr) {
                 panic!(
-                    "assertion failed: parse_datetime({}) should be None but is Some({})",
+                    "assertion failed: parse_timestamp({}) should be None but is Some({})",
                     stringify!($expr),
                     x,
                 );

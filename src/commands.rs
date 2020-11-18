@@ -4,7 +4,7 @@ use log::info;
 use crate::models::{Repository, Status, Task};
 use crate::utils::input::prompt;
 use crate::utils::tables::{Column, Table};
-use crate::utils::time::{format_duration, format_localdatetime, LocalDateTime};
+use crate::utils::time::{format_duration, format_timestamp, Timestamp};
 #[macro_use]
 use crate::table;
 
@@ -36,7 +36,7 @@ impl Dit {
             .map(|()| info!("Created: {}", task.id))
     }
 
-    pub fn do_work_on(&self, key: &str, now: LocalDateTime) -> Result<()> {
+    pub fn do_work_on(&self, key: &str, now: Timestamp) -> Result<()> {
         let id = self.repo.resolve_key(key);
 
         if !self.repo.exists(&id) {
@@ -52,7 +52,7 @@ impl Dit {
             .map(|()| info!("Working on: {}", id))
     }
 
-    pub fn do_halt(&self, now: LocalDateTime) -> Result<()> {
+    pub fn do_halt(&self, now: Timestamp) -> Result<()> {
         if let Some(id) = self.repo.is_clocked_in() {
             return self
                 .repo
@@ -85,7 +85,7 @@ impl Dit {
         bail!("Not working on any task");
     }
 
-    pub fn do_resume(&self, now: LocalDateTime) -> Result<()> {
+    pub fn do_resume(&self, now: Timestamp) -> Result<()> {
         if let Some((id, entry)) = self.repo.current_task() {
             if entry.is_closed() {
                 return self
@@ -98,7 +98,7 @@ impl Dit {
         bail!("No previous task to resume; rebuild index?")
     }
 
-    pub fn do_switch_back(&self, now: LocalDateTime) -> Result<()> {
+    pub fn do_switch_back(&self, now: Timestamp) -> Result<()> {
         bail!("Not implemented")
     }
 
@@ -108,9 +108,9 @@ impl Dit {
         let t = table![
             Status,
             "Start",
-            |x| format_localdatetime(&x.start()),
+            |x| format_timestamp(&x.start()),
             "End",
-            |x| format_localdatetime(&x.end()),
+            |x| format_timestamp(&x.end()),
             "Effort",
             |x| format_duration(&x.duration()),
             "Total Effort",

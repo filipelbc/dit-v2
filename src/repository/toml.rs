@@ -10,7 +10,7 @@ use toml;
 
 use crate::models::{LogEntry, Repository, Status, Task, TaskData};
 use crate::utils::directory;
-use crate::utils::time::LocalDateTime;
+use crate::utils::time::Timestamp;
 
 pub struct Repo {
     directory: PathBuf,
@@ -75,14 +75,14 @@ impl Repository for Repo {
         Ok(Task::from_data(id.clone(), data))
     }
 
-    fn clock_in(&self, id: &String, now: LocalDateTime) -> Result<()> {
+    fn clock_in(&self, id: &String, now: Timestamp) -> Result<()> {
         let mut task = self.load(id)?;
         task.data.log.push(LogEntry::new(now));
         self.save(&task)?;
         self.update_index(&task)
     }
 
-    fn clock_out(&self, id: &String, now: LocalDateTime) -> Result<()> {
+    fn clock_out(&self, id: &String, now: Timestamp) -> Result<()> {
         let mut task = self.load(id)?;
         match task.data.log.last_mut() {
             Some(entry) => match entry.end {
