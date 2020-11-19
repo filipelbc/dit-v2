@@ -151,6 +151,10 @@ impl Repository for Repo {
         }
         status
     }
+
+    fn rebuild_index(&self) -> Result<()> {
+        Ok(())
+    }
 }
 
 impl Repo {

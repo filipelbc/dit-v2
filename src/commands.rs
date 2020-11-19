@@ -102,6 +102,10 @@ impl Dit {
     }
 
     pub fn do_status(&self, limit: usize, rebuild: bool, short: bool) -> Result<()> {
+        if rebuild {
+            self.repo.rebuild_index()?;
+        }
+
         let status = self.repo.get_status(limit);
 
         if short {

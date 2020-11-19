@@ -98,6 +98,7 @@ pub trait Repository {
     fn is_clocked_in(&self) -> Option<String>;
     fn current_task(&self) -> Option<(String, LogEntry)>;
     fn get_status(&self, limit: usize) -> Vec<Status>;
+    fn rebuild_index(&self) -> Result<()>;
 }
 
 impl Ord for LogEntry {
