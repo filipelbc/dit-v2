@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use toml;
+use walkdir::WalkDir;
 
 use crate::models::{LogEntry, Repository, Status, Task, TaskData};
 use crate::utils::directory;
@@ -153,6 +154,9 @@ impl Repository for Repo {
     }
 
     fn rebuild_index(&self) -> Result<()> {
+        for id in self.list_ids()? {
+            println!("{}", id);
+        }
         Ok(())
     }
 }
@@ -169,6 +173,43 @@ impl Repo {
 
     fn path(&self, id: &String) -> PathBuf {
         self.directory.join(id).with_extension("toml")
+    }
+
+    fn id_from_full_path(&self, path: &PathBuf) -> Result<String> {
+        let id = path.strip_prefix(&self.directory)
+            .with_context(|| format!("Given path is not a child of dit directory: {}", path.display()))?
+            .display()
+            .to_string()
+            .strip_suffix(".toml")
+            .with_context(|| format!("Given path does not have toml extension: {}", path.display()))?
+            .to_string();
+        Ok(id)
+    }
+
+    fn list_ids(&self) -> Result<Vec<String>> {
+        let mut ids = Vec::new();
+
+        for entry in WalkDir::new(&self.directory) {
+            let p = entry
+                .with_context(|| {
+                    format!(
+                        "Could not complete traversal of: {}",
+                        &self.directory.display()
+                    )
+                })?
+                .into_path();
+
+            if !p.extension().map(|x| x.eq("toml")).unwrap_or(false) {
+                continue;
+            }
+
+            if !p.is_file() {
+                continue;
+            }
+
+            ids.push(self.id_from_full_path(&p)?);
+        }
+        Ok(ids)
     }
 
     fn load_index(path: &Path) -> Result<Index> {
