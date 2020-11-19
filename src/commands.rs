@@ -2,10 +2,10 @@ use anyhow::{bail, Result};
 use log::info;
 
 use crate::models::{Repository, Status, Task};
+use crate::table;
 use crate::utils::input::prompt;
 use crate::utils::tables::{Column, Table};
 use crate::utils::time::{format_duration, format_timestamp, Timestamp};
-use crate::table;
 
 pub struct Dit {
     pub repo: Box<dyn Repository>,
