@@ -104,22 +104,30 @@ impl Dit {
     pub fn do_status(&self, limit: usize, rebuild: bool, short: bool) -> Result<()> {
         let status = self.repo.get_status(limit);
 
-        let t = table![
-            Status,
-            "Start",
-            |x| format_timestamp(&x.start()),
-            "End",
-            |x| format_timestamp(&x.end()),
-            "Effort",
-            |x| format_duration(&x.duration()),
-            "Total Effort",
-            |x| format_duration(&x.time_spent),
-            "Id",
-            |x| x.id.to_string(),
-            "Title",
-            |x| x.title.to_string(),
-        ];
-        t.print(&status);
+        if short {
+            if let Some(s) = status.first() {
+                if s.log_entry.is_open() {
+                    println!("{} {}", s.id, format_duration(&s.duration()));
+                }
+            }
+        } else {
+            let t = table![
+                Status,
+                "Start",
+                |x| format_timestamp(&x.start()),
+                "End",
+                |x| format_timestamp(&x.end()),
+                "Effort",
+                |x| format_duration(&x.duration()),
+                "Total Effort",
+                |x| format_duration(&x.time_spent),
+                "Id",
+                |x| x.id.to_string(),
+                "Title",
+                |x| x.title.to_string(),
+            ];
+            t.print(&status);
+        }
 
         Ok(())
     }
