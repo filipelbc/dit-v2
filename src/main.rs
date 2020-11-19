@@ -70,7 +70,9 @@ fn run(args: ArgMatches) -> Result<()> {
         }
         Some(("status", cargs)) => {
             let limit = parse_usize(cargs.value_of("limit").unwrap_or("0"))?;
-            dit.do_status(limit)
+            let rebuild = cargs.is_present("rebuild-index");
+            let short = cargs.is_present("short");
+            dit.do_status(limit, rebuild, short)
         }
         Some((cmd, _)) => bail!("Unhandled subcommand: {}", cmd),
         None => bail!("No subcommand provided"),

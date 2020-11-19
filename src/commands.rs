@@ -101,7 +101,7 @@ impl Dit {
         bail!("Not implemented")
     }
 
-    pub fn do_status(&self, limit: usize) -> Result<()> {
+    pub fn do_status(&self, limit: usize, rebuild: bool, short: bool) -> Result<()> {
         let status = self.repo.get_status(limit);
 
         let t = table![
