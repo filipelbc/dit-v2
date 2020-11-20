@@ -4,8 +4,9 @@ use log::{debug, info};
 use crate::models::{Repository, Status, Task};
 use crate::table;
 use crate::utils::input::prompt;
+use crate::utils::nice::Nice;
 use crate::utils::tables::{Column, Table};
-use crate::utils::time::{format_duration, format_timestamp, Timestamp};
+use crate::utils::time::Timestamp;
 
 pub struct Dit {
     pub repo: Box<dyn Repository>,
@@ -113,20 +114,20 @@ impl Dit {
         if short {
             if let Some(s) = status.first() {
                 if s.log_entry.is_open() {
-                    println!("{} {}", s.id, format_duration(&s.effort()));
+                    println!("{} {}", s.id, s.effort().nice());
                 }
             }
         } else {
             let t = table![
                 Status,
                 "Start",
-                |x| format_timestamp(&x.start()),
+                |x| x.start().nice(),
                 "End",
-                |x| x.end().map(|e| format_timestamp(&e)).unwrap_or(String::new()),
+                |x| x.end().map(|e| e.nice()).unwrap_or(String::new()),
                 "Effort",
-                |x| format_duration(&x.effort()),
+                |x| x.effort().nice(),
                 "Total Effort",
-                |x| format_duration(&x.time_spent),
+                |x| x.time_spent.nice(),
                 "Id",
                 |x| x.id.to_string(),
                 "Title",

@@ -3,6 +3,8 @@ use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone};
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
+use crate::utils::nice::Nice;
+
 lazy_static! {
     static ref TIMESTAMP_RE: Regex = Regex::new(
         r"^(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})-(?P<h>\d{1,2}):(?P<min>\d{2})(:(?P<s>\d{2}))?$"
@@ -24,6 +26,10 @@ pub fn now() -> Timestamp {
     local_to_fixed(Local::now())
 }
 
+fn local_to_fixed(local_date_time: DateTime<Local>) -> DateTime<FixedOffset> {
+    local_date_time.with_timezone(local_date_time.offset())
+}
+
 pub fn resolve(at: Option<&str>) -> Result<Timestamp> {
     match at {
         Some(x) => parse_timestamp(x).with_context(|| format!("Invalid date/time value: {}", x)),
@@ -31,35 +37,35 @@ pub fn resolve(at: Option<&str>) -> Result<Timestamp> {
     }
 }
 
-pub fn format_timestamp(x: &Timestamp) -> String {
-    x.format(TIMESTAMP_FORMAT).to_string()
-}
-
-pub fn format_duration(x: &Duration) -> String {
-    let mut r = x.num_seconds();
-
-    if r == 0 {
-        return "0s".to_string();
+impl Nice for Timestamp {
+    fn nice(&self) -> String {
+        self.format(TIMESTAMP_FORMAT).to_string()
     }
-
-    let hours = r / 3600;
-    r %= 3600;
-
-    format!(
-        "{}{}{}",
-        format_duration_piece(hours, "h"),
-        format_duration_piece(r / 60, "min"),
-        format_duration_piece(r % 60, "s"),
-    )
 }
 
-fn local_to_fixed(local_date_time: DateTime<Local>) -> DateTime<FixedOffset> {
-    local_date_time.with_timezone(local_date_time.offset())
+impl Nice for Duration {
+    fn nice(&self) -> String {
+        let mut r = self.num_seconds();
+
+        if r == 0 {
+            return "0s".to_string();
+        }
+
+        let hours = r / 3600;
+        r %= 3600;
+
+        format!(
+            "{}{}{}",
+            format_duration_piece(hours, "h"),
+            format_duration_piece(r / 60, "min"),
+            format_duration_piece(r % 60, "s"),
+        )
+    }
 }
 
 fn format_duration_piece(x: i64, suffix: &str) -> String {
     if x == 0 {
-        "".to_string()
+        String::new()
     } else {
         format!("{}{}", x, suffix)
     }
@@ -119,7 +125,7 @@ pub mod timestamp {
     use chrono::DateTime;
     use serde::{de::Error, Deserialize, Deserializer, Serializer};
 
-    use super::{format_timestamp, Timestamp, TIMESTAMP_FORMAT};
+    use super::{Nice, Timestamp, TIMESTAMP_FORMAT};
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
     where
@@ -134,7 +140,7 @@ pub mod timestamp {
     where
         S: Serializer,
     {
-        serializer.serialize_str(format_timestamp(value).as_str())
+        serializer.serialize_str(value.nice().as_str())
     }
 
     pub mod optional {
@@ -167,7 +173,7 @@ pub mod duration {
     use chrono::Duration;
     use serde::{de::Error, Deserialize, Deserializer, Serializer};
 
-    use super::{format_duration, parse_duration};
+    use super::{parse_duration, Nice};
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
     where
@@ -182,7 +188,7 @@ pub mod duration {
     where
         S: Serializer,
     {
-        serializer.serialize_str(format_duration(value).as_str())
+        serializer.serialize_str(value.nice().as_str())
     }
 }
 
