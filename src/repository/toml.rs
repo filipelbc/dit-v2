@@ -273,10 +273,10 @@ fn read<T: DeserializeOwned>(f: &PathBuf) -> Result<T> {
 }
 
 fn write<T: Serialize>(f: &PathBuf, d: &T) -> Result<()> {
-    trace!("Writing to file: {}", f.display());
-
     let p = f.parent().unwrap();
     directory::ensure_exists(p)?;
+
+    trace!("Writing to file: {}", f.display());
 
     let s = toml::to_string_pretty(&d).context("Could not serialize object")?;
     fs::write(f, s).with_context(|| format!("Could not write to file: {}", f.display()))
