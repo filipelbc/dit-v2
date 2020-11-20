@@ -18,6 +18,8 @@ pub struct Repo {
     index: RefCell<Index>,
 }
 
+type Index = HashMap<String, IndexEntry>;
+
 #[derive(Serialize, Deserialize)]
 struct IndexEntry {
     title: String,
@@ -28,7 +30,7 @@ struct IndexEntry {
 }
 
 impl IndexEntry {
-    pub fn new(task: &Task, entry: &LogEntry) -> Self {
+    fn new(task: &Task, entry: &LogEntry) -> Self {
         IndexEntry {
             title: task.data.title.clone(),
             log_entry: entry.clone(),
@@ -36,7 +38,7 @@ impl IndexEntry {
         }
     }
 
-    pub fn to_status(&self, id: &String) -> Status {
+    fn to_status(&self, id: &String) -> Status {
         Status {
             id: id.clone(),
             title: self.title.clone(),
@@ -45,8 +47,6 @@ impl IndexEntry {
         }
     }
 }
-
-type Index = HashMap<String, IndexEntry>;
 
 impl Repository for Repo {
     fn resolve_key(&self, key: &str) -> String {
@@ -61,7 +61,9 @@ impl Repository for Repo {
         debug!("Saving task: {}", task.id);
 
         let f = self.path(&task.id);
-        write(&f, &task.data).with_context(|| format!("Could not save task: {}", task.id))
+        write(&f, &task.data).with_context(|| format!("Could not save task: {}", task.id))?;
+        self.update_index(&task);
+        self.save_index()
     }
 
     fn load(&self, id: &String) -> Result<Task> {
@@ -79,8 +81,7 @@ impl Repository for Repo {
     fn clock_in(&self, id: &String, now: Timestamp) -> Result<()> {
         let mut task = self.load(id)?;
         task.data.log.push(LogEntry::new(now));
-        self.save(&task)?;
-        self.update_index(&task)
+        self.save(&task)
     }
 
     fn clock_out(&self, id: &String, now: Timestamp) -> Result<()> {
@@ -92,8 +93,7 @@ impl Repository for Repo {
             },
             None => bail!("No log entry found to close"),
         };
-        self.save(&task)?;
-        self.update_index(&task)
+        self.save(&task)
     }
 
     fn un_clock_in(&self, id: &String) -> Result<()> {
@@ -105,8 +105,7 @@ impl Repository for Repo {
             },
             None => bail!("No log entry found to close"),
         };
-        self.save(&task)?;
-        self.update_index(&task)
+        self.save(&task)
     }
 
     fn un_clock_out(&self, id: &String) -> Result<()> {
@@ -118,8 +117,7 @@ impl Repository for Repo {
             },
             None => bail!("No log entry found to close"),
         };
-        self.save(&task)?;
-        self.update_index(&task)
+        self.save(&task)
     }
 
     fn is_clocked_in(&self) -> Option<String> {
@@ -154,10 +152,13 @@ impl Repository for Repo {
     }
 
     fn rebuild_index(&self) -> Result<()> {
+        self.index.borrow_mut().clear();
+
         for id in self.list_ids()? {
-            println!("{}", id);
+            let t = self.load(&id)?;
+            self.update_index(&t);
         }
-        Ok(())
+        self.save_index()
     }
 }
 
@@ -213,6 +214,8 @@ impl Repo {
     }
 
     fn load_index(path: &Path) -> Result<Index> {
+        trace!("Loading index");
+
         let s = path.join(".index");
         if s.is_file() {
             read(&s)
@@ -234,11 +237,13 @@ impl Repo {
     }
 
     fn save_index(&self) -> Result<()> {
+        trace!("Saving index");
+
         let s = self.directory.join(".index");
         write(&s, &self.index).context("Could not save index")
     }
 
-    fn update_index(&self, task: &Task) -> Result<()> {
+    fn update_index(&self, task: &Task) {
         if let Some(entry) = task.data.log.last() {
             self.index
                 .borrow_mut()
@@ -246,7 +251,6 @@ impl Repo {
         } else {
             self.index.borrow_mut().remove(&task.id);
         }
-        self.save_index()
     }
 }
 

@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use log::info;
+use log::{debug, info};
 
 use crate::models::{Repository, Status, Task};
 use crate::table;
@@ -103,7 +103,9 @@ impl Dit {
 
     pub fn do_status(&self, limit: usize, rebuild: bool, short: bool) -> Result<()> {
         if rebuild {
+            debug!("Rebuilding index");
             self.repo.rebuild_index()?;
+            debug!("Done")
         }
 
         let status = self.repo.get_status(limit);
