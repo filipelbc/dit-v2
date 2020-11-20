@@ -26,7 +26,7 @@ struct IndexEntry {
     #[serde(flatten)]
     log_entry: LogEntry,
     #[serde(with = "crate::utils::time::duration")]
-    time_spent: Duration,
+    total_effort: Duration,
 }
 
 impl IndexEntry {
@@ -34,7 +34,7 @@ impl IndexEntry {
         IndexEntry {
             title: task.data.title.clone(),
             log_entry: entry.clone(),
-            time_spent: task.time_spent(),
+            total_effort: task.total_effort(),
         }
     }
 
@@ -43,7 +43,7 @@ impl IndexEntry {
             id: id.clone(),
             title: self.title.clone(),
             log_entry: self.log_entry.clone(),
-            time_spent: self.time_spent.clone(),
+            time_spent: self.total_effort.clone(),
         }
     }
 }
@@ -255,14 +255,11 @@ impl Repo {
 }
 
 impl Task {
-    fn time_spent(&self) -> Duration {
+    fn total_effort(&self) -> Duration {
         self.data
             .log
             .iter()
-            .fold(Duration::seconds(0), |a, x| match x.end {
-                Some(end) => a + (end - x.start),
-                None => a,
-            })
+            .fold(Duration::seconds(0), |a, x| a + x.effort())
     }
 }
 

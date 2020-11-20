@@ -113,7 +113,7 @@ impl Dit {
         if short {
             if let Some(s) = status.first() {
                 if s.log_entry.is_open() {
-                    println!("{} {}", s.id, format_duration(&s.duration()));
+                    println!("{} {}", s.id, format_duration(&s.effort()));
                 }
             }
         } else {
@@ -122,9 +122,9 @@ impl Dit {
                 "Start",
                 |x| format_timestamp(&x.start()),
                 "End",
-                |x| format_timestamp(&x.end()),
+                |x| x.end().map(|e| format_timestamp(&e)).unwrap_or(String::new()),
                 "Effort",
-                |x| format_duration(&x.duration()),
+                |x| format_duration(&x.effort()),
                 "Total Effort",
                 |x| format_duration(&x.time_spent),
                 "Id",

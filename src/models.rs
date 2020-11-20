@@ -70,6 +70,13 @@ impl LogEntry {
     pub fn is_closed(&self) -> bool {
         self.end.is_some()
     }
+
+    pub fn effort(&self) -> Duration {
+        match self.end {
+            Some(e) => e - self.start,
+            None => now() - self.start,
+        }
+    }
 }
 
 impl Status {
@@ -77,12 +84,12 @@ impl Status {
         self.log_entry.start
     }
 
-    pub fn end(&self) -> Timestamp {
-        self.log_entry.end.unwrap_or_else(|| now())
+    pub fn end(&self) -> Option<Timestamp> {
+        self.log_entry.end
     }
 
-    pub fn duration(&self) -> Duration {
-        self.end() - self.start()
+    pub fn effort(&self) -> Duration {
+        self.log_entry.effort()
     }
 }
 
