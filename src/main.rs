@@ -92,6 +92,12 @@ fn run(args: ArgMatches) -> Result<()> {
             let short = cargs.is_present("short");
             dit.do_status(limit, rebuild, short)
         }
+        Some(("list", cargs)) => dit.do_list(
+            cargs.is_present("daily"),
+            cargs.is_present("daily-only"),
+            get_timestamp(&cargs, "after")?,
+            get_timestamp(&cargs, "before")?,
+        ),
         Some((cmd, _)) => bail!("Unhandled subcommand: {}", cmd),
         None => bail!("No subcommand provided"),
     }

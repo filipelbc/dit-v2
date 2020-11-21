@@ -139,7 +139,13 @@ impl Dit {
         Ok(())
     }
 
-    pub fn do_list(&self, daily: bool, daily_only: bool, after: Timestamp, before: Timestamp) -> Result<()> {
+    pub fn do_list(
+        &self,
+        daily: bool,
+        daily_only: bool,
+        after: Option<Timestamp>,
+        before: Option<Timestamp>,
+    ) -> Result<()> {
         Ok(())
     }
 }
