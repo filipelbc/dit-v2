@@ -1,10 +1,10 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::ArgMatches;
 use log::debug;
 
 mod utils;
 use crate::utils::graceful::Graceful;
-use crate::utils::parse::parse_usize;
+use crate::utils::time::{Timestamp, parse_timestamp, now};
 
 mod models;
 
@@ -15,6 +15,24 @@ mod commands;
 use crate::commands::Dit;
 
 mod cli;
+
+fn get_usize(cargs: &ArgMatches, name: &str) -> Result<usize> {
+    let s = cargs.value_of(name).unwrap();
+    usize::from_str_radix(s, 10).with_context(|| format!("Invalid value for '{}': {}", name, s))
+}
+
+fn get_timestamp(cargs: &ArgMatches, name: &str) -> Result<Option<Timestamp>> {
+    match cargs.value_of(name) {
+        Some(x) => parse_timestamp(x)
+            .with_context(|| format!("Invalid date/time value for '{}': {}", name, x))
+            .map(Some),
+        None => Ok(None),
+    }
+}
+
+fn get_at(cargs: &ArgMatches) -> Result<Timestamp> {
+    get_timestamp(cargs, "at").map(|x| x.unwrap_or_else(|| now()))
+}
 
 fn run(args: ArgMatches) -> Result<()> {
     let directory = utils::directory::resolve(args.value_of("directory"))?;
@@ -31,7 +49,7 @@ fn run(args: ArgMatches) -> Result<()> {
         ),
         Some(("work-on", cargs)) => {
             let task = cargs.value_of("task").unwrap();
-            let now = utils::time::resolve(cargs.value_of("at"))?;
+            let now = get_at(&cargs)?;
 
             if cargs.is_present("new") {
                 dit.do_new(task, cargs.value_of("title"), cargs.is_present("fetch"))?;
@@ -40,20 +58,20 @@ fn run(args: ArgMatches) -> Result<()> {
             dit.do_work_on(task, now)
         }
         Some(("halt", cargs)) => {
-            let now = utils::time::resolve(cargs.value_of("at"))?;
+            let now = get_at(&cargs)?;
 
             dit.do_halt(now)
         }
         Some(("append", _)) => dit.do_append(),
         Some(("cancel", _)) => dit.do_cancel(),
         Some(("resume", cargs)) => {
-            let now = utils::time::resolve(cargs.value_of("at"))?;
+            let now = get_at(&cargs)?;
 
             dit.do_resume(now)
         }
         Some(("switch-to", cargs)) => {
             let task = cargs.value_of("task").unwrap();
-            let now = utils::time::resolve(cargs.value_of("at"))?;
+            let now = get_at(&cargs)?;
 
             if cargs.is_present("new") {
                 dit.do_new(task, cargs.value_of("title"), cargs.is_present("fetch"))?;
@@ -64,12 +82,12 @@ fn run(args: ArgMatches) -> Result<()> {
             dit.do_work_on(task, now)
         }
         Some(("switch-back", cargs)) => {
-            let now = utils::time::resolve(cargs.value_of("at"))?;
+            let now = get_at(&cargs)?;
 
             dit.do_switch_back(now)
         }
         Some(("status", cargs)) => {
-            let limit = parse_usize(cargs.value_of("limit").unwrap_or("0"))?;
+            let limit = get_usize(cargs, "limit")?;
             let rebuild = cargs.is_present("rebuild-index");
             let short = cargs.is_present("short");
             dit.do_status(limit, rebuild, short)

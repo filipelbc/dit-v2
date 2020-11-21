@@ -30,13 +30,6 @@ fn local_to_fixed(local_date_time: DateTime<Local>) -> DateTime<FixedOffset> {
     local_date_time.with_timezone(local_date_time.offset())
 }
 
-pub fn resolve(at: Option<&str>) -> Result<Timestamp> {
-    match at {
-        Some(x) => parse_timestamp(x).with_context(|| format!("Invalid date/time value: {}", x)),
-        None => Ok(now()),
-    }
-}
-
 impl Nice for Timestamp {
     fn nice(&self) -> String {
         self.format(TIMESTAMP_FORMAT).to_string()
@@ -71,7 +64,7 @@ fn format_duration_piece(x: i64, suffix: &str) -> String {
     }
 }
 
-fn parse_timestamp(x: &str) -> Option<Timestamp> {
+pub fn parse_timestamp(x: &str) -> Option<Timestamp> {
     try_timestamp(x).or(try_time(x)).or(try_duration(x))
 }
 
