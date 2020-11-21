@@ -172,5 +172,32 @@ pub fn parse() -> ArgMatches {
                     .short('s')
             )
         )
+        .subcommand(
+            new_app("list")
+            .visible_alias("l")
+            .about("Lists log entries in chronological order, most recent first")
+            .arg(
+                Arg::new("daily")
+                    .about("Show daily totals")
+                    .long("daily")
+            )
+            .arg(
+                Arg::new("daily-only")
+                    .about("Show only daily totals")
+                    .long("daily-only")
+            )
+            .arg(
+                Arg::new("after")
+                    .about("Consider only entries from after this date")
+                    .value_name("DATETIME")
+                    .long("after")
+            )
+            .arg(
+                Arg::new("before")
+                    .about("Consider only entries from before this date")
+                    .value_name("DATETIME")
+                    .long("before")
+            )
+        )
         .get_matches()
 }
