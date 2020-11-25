@@ -1,10 +1,10 @@
 use anyhow::{bail, Context, Result};
 use clap::ArgMatches;
-use log::debug;
+use log::{debug, error};
+use std::process::exit;
 
 mod utils;
-use crate::utils::graceful::Graceful;
-use crate::utils::time::{Timestamp, parse_timestamp, now};
+use crate::utils::time::{now, parse_timestamp, Timestamp};
 
 mod models;
 
@@ -86,12 +86,11 @@ fn run(args: ArgMatches) -> Result<()> {
 
             dit.do_switch_back(now)
         }
-        Some(("status", cargs)) => {
-            let limit = get_usize(cargs, "limit")?;
-            let rebuild = cargs.is_present("rebuild-index");
-            let short = cargs.is_present("short");
-            dit.do_status(limit, rebuild, short)
-        }
+        Some(("status", cargs)) => dit.do_status(
+            get_usize(cargs, "limit")?,
+            cargs.is_present("rebuild-index"),
+            cargs.is_present("short"),
+        ),
         Some(("list", cargs)) => dit.do_list(
             cargs.is_present("daily"),
             cargs.is_present("daily-only"),
@@ -108,5 +107,11 @@ fn main() {
 
     utils::logging::init(args.occurrences_of("verbose"));
 
-    run(args).graceful();
+    match run(args) {
+        Err(err) => {
+            error!("{:?}", err);
+            exit(1);
+        }
+        _ => (),
+    }
 }

@@ -177,12 +177,23 @@ impl Repo {
     }
 
     fn id_from_full_path(&self, path: &PathBuf) -> Result<String> {
-        let id = path.strip_prefix(&self.directory)
-            .with_context(|| format!("Given path is not a child of dit directory: {}", path.display()))?
+        let id = path
+            .strip_prefix(&self.directory)
+            .with_context(|| {
+                format!(
+                    "Given path is not a child of dit directory: {}",
+                    path.display()
+                )
+            })?
             .display()
             .to_string()
             .strip_suffix(".toml")
-            .with_context(|| format!("Given path does not have toml extension: {}", path.display()))?
+            .with_context(|| {
+                format!(
+                    "Given path does not have toml extension: {}",
+                    path.display()
+                )
+            })?
             .to_string();
         Ok(id)
     }
