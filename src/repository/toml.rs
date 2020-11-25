@@ -128,12 +128,17 @@ impl Repository for Repo {
             .map(|(k, _)| k.clone())
     }
 
-    fn current_task(&self) -> Option<(String, LogEntry)> {
-        self.index
-            .borrow()
+    fn previous_task(&self, i: usize) -> Option<(String, LogEntry)> {
+        let b = self.index.borrow();
+
+        let mut d: Vec<_> = b
             .iter()
-            .max_by(|x, y| x.1.log_entry.cmp(&y.1.log_entry))
             .map(|(k, v)| (k.clone(), v.log_entry.clone()))
+            .collect();
+
+        d.sort_unstable_by(|x, y| y.1.cmp(&x.1));
+
+        d.get(i).map(|(k, v)| (k.clone(), v.clone()))
     }
 
     fn get_status(&self, limit: usize) -> Vec<Status> {

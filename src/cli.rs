@@ -83,7 +83,7 @@ pub fn parse() -> ArgMatches {
         .subcommand(
             new_app("new")
             .visible_alias("n")
-            .about("Creates a new task. You'll be prompted for its title if it is not provided.")
+            .about("Creates a new task. You'll be prompted for a title if one is not provided.")
             .arg(
                 Arg::new("task")
                 .about("Task to be created. This is the main identifier of the task. Use '/' to create nested tasks, e.g. 'foo/bar'.")
@@ -102,7 +102,7 @@ pub fn parse() -> ArgMatches {
         .subcommand(
             new_app("work-on")
             .visible_alias("w")
-            .about("Starts clocking on the specified task. Does nothing if there already is an active task. Sets the CURRENT task.")
+            .about("Starts clocking on the specified task.")
             .arg(task_param())
             .arg(at_arg())
             .arg(new_arg())
@@ -112,7 +112,7 @@ pub fn parse() -> ArgMatches {
         .subcommand(
             new_app("halt")
             .visible_alias("h")
-            .about("Stops clocking on the currently active task. Does nothing if there is no active task.")
+            .about("Stops clocking on the currently active task.")
             .arg(at_arg())
         )
         .subcommand(
@@ -123,18 +123,24 @@ pub fn parse() -> ArgMatches {
         .subcommand(
             new_app("cancel")
             .visible_alias("c")
-            .about("Undoes the previous 'work-on'. Does nothing if there is no active task.")
+            .about("Undoes the previous 'work-on'.")
         )
         .subcommand(
             new_app("resume")
             .visible_alias("r")
-            .about("Starts clocking on the CURRENT task. Same as a 'work-on CURRENT'. Does nothing if there is no CURRENT task.")
+            .about("Starts clocking on the last active task.")
             .arg(at_arg())
+            .arg(
+                Arg::new("index")
+                    .about("Resumes working on the the I'th previous task.")
+                    .value_name("I")
+                    .default_value("0")
+            )
         )
         .subcommand(
             new_app("switch-to")
             .visible_alias("t")
-            .about("Stops clocking on the CURRENT task, and starts clocking on the specified task. Same as 'halt' followed by 'work-on TASK'.")
+            .about("Stops clocking on the currently active task, and starts clocking on the specified task.")
             .arg(task_param())
             .arg(at_arg())
             .arg(new_arg())
@@ -144,8 +150,14 @@ pub fn parse() -> ArgMatches {
         .subcommand(
             new_app("switch-back")
             .visible_alias("b")
-            .about("Stops clocking on the CURRENT task, and starts clocking on the PREVIOUS task. Same as 'halt' followed by 'work-on PREVIOUS'.")
+            .about("Stops clocking on the currently active task, and starts clocking on the previous task.")
             .arg(at_arg())
+            .arg(
+                Arg::new("index")
+                    .about("Switches back to the ith previous task.")
+                    .value_name("I")
+                    .default_value("1")
+            )
         )
         .subcommand(
             new_app("status")

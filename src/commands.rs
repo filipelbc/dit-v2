@@ -44,7 +44,7 @@ impl Dit {
         }
 
         if let Some(task_id) = self.repo.is_clocked_in() {
-            bail!("Already working on: {}", task_id);
+            bail!("Already working on a task: {}", task_id);
         }
 
         self.repo
@@ -63,7 +63,7 @@ impl Dit {
     }
 
     pub fn do_append(&self) -> Result<()> {
-        if let Some((id, entry)) = self.repo.current_task() {
+        if let Some((id, entry)) = self.repo.previous_task(0) {
             if entry.is_closed() {
                 return self
                     .repo
@@ -85,21 +85,17 @@ impl Dit {
         bail!("Not working on any task");
     }
 
-    pub fn do_resume(&self, now: Timestamp) -> Result<()> {
-        if let Some((id, entry)) = self.repo.current_task() {
+    pub fn do_work_on_by_index(&self, now: Timestamp, index: usize) -> Result<()> {
+        if let Some((id, entry)) = self.repo.previous_task(index) {
             if entry.is_closed() {
                 return self
                     .repo
                     .clock_in(&id, now)
-                    .map(|()| info!("Resuming: {}", id));
+                    .map(|()| info!("Working on: {}", id));
             }
-            bail!("Already working on: {}", id);
+            bail!("Already working on a task: {}", id);
         }
-        bail!("No previous task to resume; rebuild index?")
-    }
-
-    pub fn do_switch_back(&self, now: Timestamp) -> Result<()> {
-        bail!("Not implemented")
+        bail!("No previous task {} to work on; rebuild index?", index);
     }
 
     pub fn do_status(&self, limit: usize, rebuild: bool, short: bool) -> Result<()> {

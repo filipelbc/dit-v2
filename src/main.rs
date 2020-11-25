@@ -67,7 +67,10 @@ fn run(args: ArgMatches) -> Result<()> {
         Some(("resume", cargs)) => {
             let now = get_at(&cargs)?;
 
-            dit.do_resume(now)
+            dit.do_work_on_by_index(
+                now,
+                get_usize(cargs, "index")?,
+            )
         }
         Some(("switch-to", cargs)) => {
             let task = cargs.value_of("task").unwrap();
@@ -84,7 +87,12 @@ fn run(args: ArgMatches) -> Result<()> {
         Some(("switch-back", cargs)) => {
             let now = get_at(&cargs)?;
 
-            dit.do_switch_back(now)
+            dit.do_halt(now)?;
+
+            dit.do_work_on_by_index(
+                now,
+                get_usize(cargs, "index")?,
+            )
         }
         Some(("status", cargs)) => dit.do_status(
             get_usize(cargs, "limit")?,

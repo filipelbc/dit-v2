@@ -103,7 +103,7 @@ pub trait Repository {
     fn un_clock_in(&self, id: &String) -> Result<()>;
     fn un_clock_out(&self, id: &String) -> Result<()>;
     fn is_clocked_in(&self) -> Option<String>;
-    fn current_task(&self) -> Option<(String, LogEntry)>;
+    fn previous_task(&self, i: usize) -> Option<(String, LogEntry)>;
     fn get_status(&self, limit: usize) -> Vec<Status>;
     fn rebuild_index(&self) -> Result<()>;
 }
