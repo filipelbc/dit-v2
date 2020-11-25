@@ -28,11 +28,17 @@ pub struct LogEntry {
     pub end: Option<Timestamp>,
 }
 
-pub struct Status {
+pub struct ListItem {
     pub id: String,
     pub title: String,
     pub log_entry: LogEntry,
-    pub time_spent: Duration,
+}
+
+pub struct StatusItem {
+    pub id: String,
+    pub title: String,
+    pub log_entry: LogEntry,
+    pub total_effort: Duration,
 }
 
 impl Task {
@@ -79,7 +85,7 @@ impl LogEntry {
     }
 }
 
-impl Status {
+impl StatusItem {
     pub fn start(&self) -> Timestamp {
         self.log_entry.start
     }
@@ -104,7 +110,8 @@ pub trait Repository {
     fn un_clock_out(&self, id: &String) -> Result<()>;
     fn is_clocked_in(&self) -> Option<String>;
     fn previous_task(&self, i: usize) -> Option<(String, LogEntry)>;
-    fn get_status(&self, limit: usize) -> Vec<Status>;
+    fn get_status(&self, limit: usize) -> Vec<StatusItem>;
+    fn get_listing(&self, after: Option<Timestamp>, before: Option<Timestamp>) -> Vec<ListItem>;
     fn rebuild_index(&self) -> Result<()>;
 }
 

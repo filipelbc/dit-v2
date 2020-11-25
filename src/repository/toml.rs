@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use toml;
 use walkdir::WalkDir;
 
-use crate::models::{LogEntry, Repository, Status, Task, TaskData};
+use crate::models::{ListItem, LogEntry, Repository, StatusItem, Task, TaskData};
 use crate::utils::directory;
 use crate::utils::time::Timestamp;
 
@@ -38,12 +38,12 @@ impl IndexEntry {
         }
     }
 
-    fn to_status(&self, id: &String) -> Status {
-        Status {
+    fn to_status(&self, id: &String) -> StatusItem {
+        StatusItem {
             id: id.clone(),
             title: self.title.clone(),
             log_entry: self.log_entry.clone(),
-            time_spent: self.total_effort.clone(),
+            total_effort: self.total_effort.clone(),
         }
     }
 }
@@ -141,8 +141,8 @@ impl Repository for Repo {
         d.get(i).map(|(k, v)| (k.clone(), v.clone()))
     }
 
-    fn get_status(&self, limit: usize) -> Vec<Status> {
-        let mut status: Vec<Status> = self
+    fn get_status(&self, limit: usize) -> Vec<StatusItem> {
+        let mut status: Vec<StatusItem> = self
             .index
             .borrow()
             .iter()
@@ -154,6 +154,10 @@ impl Repository for Repo {
             status.truncate(limit);
         }
         status
+    }
+
+    fn get_listing(&self, after: Option<Timestamp>, before: Option<Timestamp>) -> Vec<ListItem> {
+        Vec::new()
     }
 
     fn rebuild_index(&self) -> Result<()> {

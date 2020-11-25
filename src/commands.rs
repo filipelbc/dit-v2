@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use log::{debug, info};
 
-use crate::models::{Repository, Status, Task};
+use crate::models::{Repository, StatusItem, Task};
 use crate::table;
 use crate::utils::input::prompt;
 use crate::utils::nice::Nice;
@@ -115,7 +115,7 @@ impl Dit {
             }
         } else {
             let t = table![
-                Status,
+                StatusItem,
                 "Start",
                 |x| x.start().nice(),
                 "End",
@@ -123,7 +123,7 @@ impl Dit {
                 "Effort",
                 |x| x.effort().nice(),
                 "Total Effort",
-                |x| x.time_spent.nice(),
+                |x| x.total_effort.nice(),
                 "Id",
                 |x| x.id.to_string(),
                 "Title",
@@ -142,6 +142,9 @@ impl Dit {
         after: Option<Timestamp>,
         before: Option<Timestamp>,
     ) -> Result<()> {
+
+        let data = self.repo.get_listing(after, before);
+
         Ok(())
     }
 }
