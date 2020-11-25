@@ -190,12 +190,12 @@ pub fn parse() -> ArgMatches {
             .about("Lists log entries in chronological order, most recent first")
             .arg(
                 Arg::new("daily")
-                    .about("Show daily totals")
+                    .about("Show daily summaries")
                     .long("daily")
             )
             .arg(
                 Arg::new("daily-only")
-                    .about("Show only daily totals")
+                    .about("Show only daily summaries")
                     .long("daily-only")
             )
             .arg(
