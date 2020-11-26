@@ -20,7 +20,7 @@ pub struct Repo {
 
 type Index = HashMap<String, IndexEntry>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct IndexEntry {
     title: String,
     #[serde(flatten)]
@@ -129,16 +129,7 @@ impl Repository for Repo {
     }
 
     fn previous_task(&self, i: usize) -> Option<(String, LogEntry)> {
-        let b = self.index.borrow();
-
-        let mut d: Vec<_> = b
-            .iter()
-            .map(|(k, v)| (k.clone(), v.log_entry.clone()))
-            .collect();
-
-        d.sort_unstable_by(|x, y| y.1.cmp(&x.1));
-
-        d.get(i).map(|(k, v)| (k.clone(), v.clone()))
+        self.sorted_index().get(i).map(|(k, v)| (k.clone(), v.log_entry.clone()))
     }
 
     fn get_status(&self, limit: usize) -> Vec<StatusItem> {
@@ -231,6 +222,19 @@ impl Repo {
             ids.push(self.id_from_full_path(&p)?);
         }
         Ok(ids)
+    }
+
+    fn sorted_index(&self) -> Vec<(String, IndexEntry)> {
+        let b = self.index.borrow();
+
+        let mut d: Vec<_> = b
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
+        d.sort_unstable_by(|x, y| y.1.log_entry.cmp(&x.1.log_entry));
+
+        d
     }
 
     fn load_index(path: &Path) -> Result<Index> {
