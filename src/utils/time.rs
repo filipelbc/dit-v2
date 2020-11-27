@@ -43,11 +43,15 @@ impl Nice for Duration {
             return "0s".to_string();
         }
 
+        let days = r / 86400;
+        r %= 86400;
+
         let hours = r / 3600;
         r %= 3600;
 
         format!(
-            "{}{}{}",
+            "{}{}{}{}",
+            format_duration_piece(days, "d"),
             format_duration_piece(hours, "h"),
             format_duration_piece(r / 60, "min"),
             format_duration_piece(r % 60, "s"),
@@ -69,7 +73,7 @@ pub fn parse_timestamp(x: &str) -> Option<Timestamp> {
 
 fn parse_duration(x: &str) -> Option<Duration> {
     DURATION_RE.captures(x).map(|m| {
-        let s = i(&m, "h") * 3600 + i(&m, "min") * 60 + i(&m, "s");
+        let s = i(&m, "d") * 86400 +  i(&m, "h") * 3600 + i(&m, "min") * 60 + i(&m, "s");
         Duration::seconds(i64::from(s))
     })
 }
