@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, FixedOffset, Local, TimeZone};
+use chrono::{Date, DateTime, Duration, FixedOffset, Local, TimeZone};
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
@@ -18,6 +18,7 @@ lazy_static! {
 }
 
 const TIMESTAMP_FORMAT: &str = "%F %T %z";
+const DATE_FORMAT: &str = "%A %F %z";
 
 pub type Timestamp = DateTime<FixedOffset>;
 
@@ -32,6 +33,12 @@ fn local_to_fixed(local_date_time: DateTime<Local>) -> DateTime<FixedOffset> {
 impl Nice for Timestamp {
     fn nice(&self) -> String {
         self.format(TIMESTAMP_FORMAT).to_string()
+    }
+}
+
+impl Nice for Date<FixedOffset> {
+    fn nice(&self) -> String {
+        self.format(DATE_FORMAT).to_string()
     }
 }
 
@@ -73,7 +80,7 @@ pub fn parse_timestamp(x: &str) -> Option<Timestamp> {
 
 fn parse_duration(x: &str) -> Option<Duration> {
     DURATION_RE.captures(x).map(|m| {
-        let s = i(&m, "d") * 86400 +  i(&m, "h") * 3600 + i(&m, "min") * 60 + i(&m, "s");
+        let s = i(&m, "d") * 86400 + i(&m, "h") * 3600 + i(&m, "min") * 60 + i(&m, "s");
         Duration::seconds(i64::from(s))
     })
 }
