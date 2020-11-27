@@ -28,6 +28,7 @@ pub struct LogEntry {
     pub end: Option<Timestamp>,
 }
 
+#[derive(Clone)]
 pub struct ListItem {
     pub id: String,
     pub title: String,

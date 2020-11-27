@@ -1,5 +1,7 @@
 use anyhow::{bail, Result};
+use itertools::Itertools;
 use log::{debug, info};
+use chrono::Duration;
 
 use crate::models::{ListItem, Repository, StatusItem, Task};
 use crate::table;
@@ -157,7 +159,17 @@ impl Dit {
             "Title",
             |x| x.title.to_string(),
         ];
-        t.print(&data);
+
+        if daily {
+            for (key, group) in &data.iter().group_by(|i| i.log_entry.start.date()) {
+                let items: Vec<_> = group.map(|x| x.clone()).collect();
+                let total_effort = items.iter().fold(Duration::seconds(0), |a, x| a + x.effort());
+                println!("{}: {}", key.nice(), total_effort.nice());
+                t.print(&items);
+            }
+        } else {
+            t.print(&data);
+        }
 
         Ok(())
     }
