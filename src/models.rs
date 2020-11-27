@@ -93,6 +93,18 @@ impl ListItem {
             log_entry: log_entry.clone(),
         }
     }
+
+    pub fn start(&self) -> Timestamp {
+        self.log_entry.start
+    }
+
+    pub fn end(&self) -> Option<Timestamp> {
+        self.log_entry.end
+    }
+
+    pub fn effort(&self) -> Duration {
+        self.log_entry.effort()
+    }
 }
 
 impl StatusItem {
