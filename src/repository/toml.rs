@@ -60,8 +60,8 @@ impl Repository for Repo {
     fn save(&self, task: &Task) -> Result<()> {
         debug!("Saving task: {}", task.id);
 
-        let f = self.path(&task.id);
-        write(&f, &task.data).with_context(|| format!("Could not save task: {}", task.id))?;
+        write(&self.path(&task.id), &task.data)
+            .with_context(|| format!("Could not save task: {}", task.id))?;
         self.update_index(&task);
         self.save_index()
     }
@@ -69,9 +69,8 @@ impl Repository for Repo {
     fn load(&self, id: &String) -> Result<Task> {
         debug!("Loading task: {}", id);
 
-        let f = self.path(&id);
         let mut data: TaskData =
-            read(&f).with_context(|| format!("Could not load task: {}", id))?;
+            read(&self.path(&id)).with_context(|| format!("Could not load task: {}", id))?;
 
         data.log.sort();
 
@@ -129,7 +128,9 @@ impl Repository for Repo {
     }
 
     fn previous_task(&self, i: usize) -> Option<(String, LogEntry)> {
-        self.sorted_index().get(i).map(|(k, v)| (k.clone(), v.log_entry.clone()))
+        self.sorted_index()
+            .get(i)
+            .map(|(k, v)| (k.clone(), v.log_entry.clone()))
     }
 
     fn get_status(&self, limit: usize) -> Vec<StatusItem> {
@@ -164,7 +165,7 @@ impl Repository for Repo {
 
 impl Repo {
     pub fn new(directory: PathBuf) -> Result<Self> {
-        let index = Repo::load_index(directory.as_path())?;
+        let index = Repo::load_index(&directory)?;
         Repo::check_index(&index)?;
         Ok(Repo {
             directory,
@@ -172,7 +173,7 @@ impl Repo {
         })
     }
 
-    fn path(&self, id: &String) -> PathBuf {
+    fn path(&self, id: &str) -> PathBuf {
         self.directory.join(id).with_extension("toml")
     }
 
@@ -227,20 +228,17 @@ impl Repo {
     fn sorted_index(&self) -> Vec<(String, IndexEntry)> {
         let b = self.index.borrow();
 
-        let mut d: Vec<_> = b
-            .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect();
+        let mut d: Vec<_> = b.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
         d.sort_unstable_by(|x, y| y.1.log_entry.cmp(&x.1.log_entry));
 
         d
     }
 
-    fn load_index(path: &Path) -> Result<Index> {
+    fn load_index(directory: &Path) -> Result<Index> {
         trace!("Loading index");
 
-        let s = path.join(".index");
+        let s = directory.join(".index").with_extension("toml");
         if s.is_file() {
             read(&s)
         } else {
@@ -263,8 +261,7 @@ impl Repo {
     fn save_index(&self) -> Result<()> {
         trace!("Saving index");
 
-        let s = self.directory.join(".index");
-        write(&s, &self.index).context("Could not save index")
+        write(&self.path(".index"), &self.index).context("Could not save index")
     }
 
     fn update_index(&self, task: &Task) {
@@ -287,7 +284,7 @@ impl Task {
     }
 }
 
-fn read<T: DeserializeOwned>(f: &PathBuf) -> Result<T> {
+fn read<T: DeserializeOwned>(f: &Path) -> Result<T> {
     trace!("Reading from file: {}", f.display());
 
     let s =
@@ -296,9 +293,8 @@ fn read<T: DeserializeOwned>(f: &PathBuf) -> Result<T> {
     toml::from_str(s.as_str()).with_context(|| format!("Could not parse file: {}", f.display()))
 }
 
-fn write<T: Serialize>(f: &PathBuf, d: &T) -> Result<()> {
-    let p = f.parent().unwrap();
-    directory::ensure_exists(p)?;
+fn write<T: Serialize>(f: &Path, d: &T) -> Result<()> {
+    directory::ensure_exists(f.parent().unwrap())?;
 
     trace!("Writing to file: {}", f.display());
 
