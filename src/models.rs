@@ -85,6 +85,16 @@ impl LogEntry {
     }
 }
 
+impl ListItem {
+    pub fn new(task: &Task, log_entry: &LogEntry) -> Self {
+        ListItem {
+            id: task.id.clone(),
+            title: task.data.title.clone(),
+            log_entry: log_entry.clone(),
+        }
+    }
+}
+
 impl StatusItem {
     pub fn start(&self) -> Timestamp {
         self.log_entry.start
@@ -111,7 +121,7 @@ pub trait Repository {
     fn is_clocked_in(&self) -> Option<String>;
     fn previous_task(&self, i: usize) -> Option<(String, LogEntry)>;
     fn get_status(&self, limit: usize) -> Vec<StatusItem>;
-    fn get_listing(&self, after: Option<Timestamp>, before: Option<Timestamp>) -> Vec<ListItem>;
+    fn get_listing(&self, after: Option<Timestamp>, before: Option<Timestamp>) -> Result<Vec<ListItem>>;
     fn rebuild_index(&self) -> Result<()>;
 }
 

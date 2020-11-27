@@ -148,8 +148,36 @@ impl Repository for Repo {
         status
     }
 
-    fn get_listing(&self, after: Option<Timestamp>, before: Option<Timestamp>) -> Vec<ListItem> {
-        Vec::new()
+    fn get_listing(
+        &self,
+        after: Option<Timestamp>,
+        before: Option<Timestamp>,
+    ) -> Result<Vec<ListItem>> {
+        let is_after = |x| after.map(|a| x >= a).unwrap_or(true);
+        let is_before = |x| before.map(|b| x <= b).unwrap_or(true);
+
+        let tasks = self
+            .sorted_index()
+            .iter()
+            .filter(|(_, v)| is_after(v.log_entry.start))
+            .map(|(id, _)| self.load(id))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let mut items = tasks
+            .iter()
+            .map(|t| {
+                t.data
+                    .log
+                    .iter()
+                    .filter(|e| is_after(e.start) && is_before(e.start))
+                    .map(move |e| ListItem::new(t, e))
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+
+        items.sort_unstable_by(|x, y| y.log_entry.cmp(&x.log_entry));
+
+        Ok(items)
     }
 
     fn rebuild_index(&self) -> Result<()> {
