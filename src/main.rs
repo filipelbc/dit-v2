@@ -2,6 +2,7 @@ use anyhow::{bail, Context, Result};
 use clap::ArgMatches;
 use log::{debug, error};
 use std::process::exit;
+use std::str::FromStr;
 
 mod utils;
 use crate::utils::time::{now, parse_timestamp, Timestamp};
@@ -12,7 +13,7 @@ mod repository;
 use crate::repository::toml::Repo;
 
 mod commands;
-use crate::commands::Dit;
+use crate::commands::{Dit, ListFormat, ListMode};
 
 mod cli;
 
@@ -67,10 +68,7 @@ fn run(args: ArgMatches) -> Result<()> {
         Some(("resume", cargs)) => {
             let now = get_at(&cargs)?;
 
-            dit.do_work_on_by_index(
-                now,
-                get_usize(cargs, "index")?,
-            )
+            dit.do_work_on_by_index(now, get_usize(cargs, "index")?)
         }
         Some(("switch-to", cargs)) => {
             let task = cargs.value_of("task").unwrap();
@@ -89,10 +87,7 @@ fn run(args: ArgMatches) -> Result<()> {
 
             dit.do_halt(now)?;
 
-            dit.do_work_on_by_index(
-                now,
-                get_usize(cargs, "index")?,
-            )
+            dit.do_work_on_by_index(now, get_usize(cargs, "index")?)
         }
         Some(("status", cargs)) => dit.do_status(
             get_usize(cargs, "limit")?,
@@ -100,8 +95,8 @@ fn run(args: ArgMatches) -> Result<()> {
             cargs.is_present("short"),
         ),
         Some(("list", cargs)) => dit.do_list(
-            cargs.is_present("daily"),
-            cargs.is_present("daily-only"),
+            ListMode::from_str(cargs.value_of("mode").unwrap())?,
+            ListFormat::from_str(cargs.value_of("format").unwrap())?,
             get_timestamp(&cargs, "after")?,
             get_timestamp(&cargs, "before")?,
         ),

@@ -1,7 +1,8 @@
 use anyhow::{bail, Result};
+use chrono::Duration;
 use itertools::Itertools;
 use log::{debug, info};
-use chrono::Duration;
+use std::str::FromStr;
 
 use crate::models::{ListItem, Repository, StatusItem, Task};
 use crate::table;
@@ -9,6 +10,18 @@ use crate::utils::input::prompt;
 use crate::utils::nice::Nice;
 use crate::utils::tables::{Column, Table};
 use crate::utils::time::Timestamp;
+
+pub enum ListMode {
+    GroupByDay,
+    Plain,
+    Daily,
+}
+
+pub enum ListFormat {
+    Table,
+    JsonLines,
+    Csv,
+}
 
 pub struct Dit {
     pub repo: Box<dyn Repository>,
@@ -139,8 +152,8 @@ impl Dit {
 
     pub fn do_list(
         &self,
-        daily: bool,
-        daily_only: bool,
+        mode: ListMode,
+        format: ListFormat,
         after: Option<Timestamp>,
         before: Option<Timestamp>,
     ) -> Result<()> {
@@ -160,17 +173,58 @@ impl Dit {
             |x| x.title.to_string(),
         ];
 
-        if daily {
-            for (key, group) in &data.iter().group_by(|i| i.log_entry.start.date()) {
-                let items: Vec<_> = group.map(|x| x.clone()).collect();
-                let total_effort = items.iter().fold(Duration::seconds(0), |a, x| a + x.effort());
-                println!("{}: {}", key.nice(), total_effort.nice());
-                t.print(&items);
+        let group_by_day = |x: Vec<ListItem>| {
+            x.into_iter()
+                .group_by(|i| i.log_entry.start.date())
+                .into_iter()
+                .map(|(k, g)| (k, g.map(|x| x.clone()).collect::<Vec<_>>()))
+                .collect::<Vec<_>>()
+        };
+
+        let total_effort =
+            |x: &Vec<ListItem>| x.iter().fold(Duration::seconds(0), |a, x| a + x.effort());
+
+        match mode {
+            ListMode::GroupByDay => {
+                for (key, items) in group_by_day(data) {
+                    println!("{}: {}", key.nice(), total_effort(&items).nice());
+                    t.print(&items);
+                }
             }
-        } else {
-            t.print(&data);
+            ListMode::Daily => {
+                for (key, items) in group_by_day(data) {
+                    println!("{}: {}", key.nice(), total_effort(&items).nice());
+                }
+            }
+            ListMode::Plain => t.print(&data),
         }
 
         Ok(())
+    }
+}
+
+impl FromStr for ListMode {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "group-by-day" => Ok(Self::GroupByDay),
+            "plain" => Ok(Self::Plain),
+            "daily" => Ok(Self::Daily),
+            _ => bail!("Invalid list mode: {}", s),
+        }
+    }
+}
+
+impl FromStr for ListFormat {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "table" => Ok(Self::Table),
+            "json-lines" => Ok(Self::JsonLines),
+            "csv" => Ok(Self::Csv),
+            _ => bail!("Invalid list format: {}", s),
+        }
     }
 }
