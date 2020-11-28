@@ -19,7 +19,7 @@ impl<R> Table<R> {
         Table { columns }
     }
 
-    pub fn print(&self, data: &Vec<R>) {
+    pub fn print(&self, data: &[R]) {
         let s_data = self.select(data);
 
         let widths = self.calc_widths(&s_data);
@@ -48,7 +48,7 @@ impl<R> Table<R> {
         }
     }
 
-    fn select(&self, data: &Vec<R>) -> Vec<Vec<String>> {
+    fn select(&self, data: &[R]) -> Vec<Vec<String>> {
         data.iter()
             .map(|x| self.columns.iter().map(|c| c.select(x)).collect())
             .collect()

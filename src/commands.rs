@@ -1,6 +1,5 @@
 use anyhow::{bail, Result};
-use chrono::Duration;
-use itertools::Itertools;
+use chrono::{Date, Duration, FixedOffset};
 use log::{debug, info};
 use std::str::FromStr;
 
@@ -173,27 +172,16 @@ impl Dit {
             |x| x.title.to_string(),
         ];
 
-        let group_by_day = |x: Vec<ListItem>| {
-            x.into_iter()
-                .group_by(|i| i.log_entry.start.date())
-                .into_iter()
-                .map(|(k, g)| (k, g.map(|x| x.clone()).collect::<Vec<_>>()))
-                .collect::<Vec<_>>()
-        };
-
-        let total_effort =
-            |x: &Vec<ListItem>| x.iter().fold(Duration::seconds(0), |a, x| a + x.effort());
-
         match mode {
             ListMode::GroupByDay => {
-                for (key, items) in group_by_day(data) {
-                    println!("{}: {}", key.nice(), total_effort(&items).nice());
+                for (key, items) in group_by_day(&data) {
+                    println!("{}: {}", key.nice(), total_effort(items).nice());
                     t.print(&items);
                 }
             }
             ListMode::Daily => {
-                for (key, items) in group_by_day(data) {
-                    println!("{}: {}", key.nice(), total_effort(&items).nice());
+                for (key, items) in group_by_day(&data) {
+                    println!("{}: {}", key.nice(), total_effort(items).nice());
                 }
             }
             ListMode::Plain => t.print(&data),
@@ -201,6 +189,29 @@ impl Dit {
 
         Ok(())
     }
+}
+
+fn total_effort(x: &[ListItem]) -> Duration {
+    x.iter().fold(Duration::seconds(0), |a, x| a + x.effort())
+}
+
+// based on: https://stackoverflow.com/a/50392400
+fn group_by_day(x: &[ListItem]) -> impl Iterator<Item = (Date<FixedOffset>, &[ListItem])> {
+    let key = |z: &ListItem| z.log_entry.start.date();
+
+    let mut slice_start = 0;
+
+    (1..x.len() + 1).flat_map(move |i| {
+        let k = key(&x[i - 1]);
+
+        if i == x.len() || k != key(&x[i]) {
+            let start = slice_start;
+            slice_start = i;
+            Some((k, &x[start..i]))
+        } else {
+            None
+        }
+    })
 }
 
 impl FromStr for ListMode {
