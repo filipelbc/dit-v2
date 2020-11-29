@@ -13,7 +13,7 @@ mod repository;
 use crate::repository::toml::Repo;
 
 mod commands;
-use crate::commands::{Dit, ListFormat, ListMode};
+use crate::commands::Dit;
 
 mod cli;
 
@@ -33,6 +33,20 @@ fn get_timestamp(cargs: &ArgMatches, name: &str) -> Result<Option<Timestamp>> {
 
 fn get_at(cargs: &ArgMatches) -> Result<Timestamp> {
     get_timestamp(cargs, "at").map(|x| x.unwrap_or_else(|| now()))
+}
+
+fn get_single<T>(cargs: &ArgMatches, name: &str) -> Result<T, T::Err>
+where
+    T: FromStr,
+{
+    T::from_str(cargs.value_of(name).unwrap())
+}
+
+fn get_many<T>(cargs: &ArgMatches, name: &str) -> Result<Vec<T>, T::Err>
+where
+    T: FromStr,
+{
+    cargs.values_of(name).unwrap().map(T::from_str).collect()
 }
 
 fn run(args: ArgMatches) -> Result<()> {
@@ -95,8 +109,8 @@ fn run(args: ArgMatches) -> Result<()> {
             cargs.is_present("short"),
         ),
         Some(("list", cargs)) => dit.do_list(
-            ListMode::from_str(cargs.value_of("mode").unwrap())?,
-            ListFormat::from_str(cargs.value_of("format").unwrap())?,
+            get_single(cargs, "mode")?,
+            get_single(cargs, "format")?,
             get_timestamp(&cargs, "after")?,
             get_timestamp(&cargs, "before")?,
         ),
