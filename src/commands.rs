@@ -160,17 +160,19 @@ impl Dit {
                 }
             }
         } else {
-            let t = Table::new(properties
-                .iter()
-                .map(columns!(StatusItem,
-                    StatusProperties::Id          => "Id",          |x| x.id.to_string(),
-                    StatusProperties::Title       => "Title",       |x| x.title.to_string(),
-                    StatusProperties::Start       => "Start",       |x| x.start().nice(),
-                    StatusProperties::End         => "End",         |x| x.end().map(|e| e.nice()).unwrap_or(String::new()),
-                    StatusProperties::Effort      => "Effort",      |x| x.effort().nice(),
-                    StatusProperties::TotalEffort => "TotalEffort", |x| x.total_effort.nice(),
-                ))
-                .collect());
+            let t = Table::new(
+                properties
+                    .iter()
+                    .map(columns!(StatusItem,
+                        StatusProperties::Id          => "Id",          |x| x.id.to_string(),
+                        StatusProperties::Title       => "Title",       |x| x.title.to_string(),
+                        StatusProperties::Start       => "Start",       |x| x.start().nice(),
+                        StatusProperties::End         => "End",         |x| x.end().nice(),
+                        StatusProperties::Effort      => "Effort",      |x| x.effort().nice(),
+                        StatusProperties::TotalEffort => "TotalEffort", |x| x.total_effort.nice(),
+                    ))
+                    .collect(),
+            );
 
             t.print(&status);
         }
@@ -188,16 +190,18 @@ impl Dit {
     ) -> Result<()> {
         let data = self.repo.get_listing(after, before)?;
 
-        let t = Table::new(properties
-            .iter()
-            .map(columns!(ListItem,
-                ListProperties::Id     => "Id",     |x| x.id.to_string(),
-                ListProperties::Title  => "Title",  |x| x.title.to_string(),
-                ListProperties::Start  => "Start",  |x| x.start().nice(),
-                ListProperties::End    => "End",    |x| x.end().map(|e| e.nice()).unwrap_or(String::new()),
-                ListProperties::Effort => "Effort", |x| x.effort().nice(),
-            ))
-            .collect());
+        let t = Table::new(
+            properties
+                .iter()
+                .map(columns!(ListItem,
+                    ListProperties::Id     => "Id",     |x| x.id.to_string(),
+                    ListProperties::Title  => "Title",  |x| x.title.to_string(),
+                    ListProperties::Start  => "Start",  |x| x.start().nice(),
+                    ListProperties::End    => "End",    |x| x.end().nice(),
+                    ListProperties::Effort => "Effort", |x| x.effort().nice(),
+                ))
+                .collect(),
+        );
 
         match mode {
             ListMode::GroupByDay => {
