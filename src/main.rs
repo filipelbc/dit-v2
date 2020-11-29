@@ -104,9 +104,9 @@ fn run(args: ArgMatches) -> Result<()> {
             dit.do_work_on_by_index(now, get_usize(cargs, "index")?)
         }
         Some(("status", cargs)) => dit.do_status(
-            get_usize(cargs, "limit")?,
-            cargs.is_present("rebuild-index"),
             cargs.is_present("short"),
+            cargs.is_present("rebuild-index"),
+            get_usize(cargs, "limit")?,
         ),
         Some(("list", cargs)) => dit.do_list(
             get_single(cargs, "mode")?,

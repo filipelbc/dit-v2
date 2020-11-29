@@ -112,7 +112,12 @@ impl Dit {
         bail!("No previous task {} to work on; rebuild index?", index);
     }
 
-    pub fn do_status(&self, limit: usize, rebuild: bool, short: bool) -> Result<()> {
+    pub fn do_status(
+        &self,
+        short: bool,
+        rebuild: bool,
+        limit: usize,
+    ) -> Result<()> {
         if rebuild {
             debug!("Rebuilding index");
             self.repo.rebuild_index()?;
