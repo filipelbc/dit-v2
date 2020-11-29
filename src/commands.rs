@@ -4,19 +4,36 @@ use log::{debug, info};
 use std::str::FromStr;
 
 use crate::models::{ListItem, Repository, StatusItem, Task};
-use crate::table;
 use crate::utils::input::prompt;
 use crate::utils::nice::Nice;
 use crate::utils::tables::{Column, Table};
 use crate::utils::time::Timestamp;
 
-pub enum TaskProperties {
+macro_rules! columns {
+    ($t:ty, $($c:pat => $n:expr, $x:expr),+ $(,)?) => {
+        |p| match p {
+            $(
+                $c => { Column::<$t>::new($n, $x) },
+            )+
+        }
+    };
+}
+
+pub enum StatusProperties {
     Id,
     Title,
     Start,
     End,
     Effort,
     TotalEffort,
+}
+
+pub enum ListProperties {
+    Id,
+    Title,
+    Start,
+    End,
+    Effort,
 }
 
 pub enum ListMode {
@@ -126,7 +143,7 @@ impl Dit {
         short: bool,
         rebuild: bool,
         limit: usize,
-        properties: &[TaskProperties],
+        properties: &[StatusProperties],
     ) -> Result<()> {
         if rebuild {
             debug!("Rebuilding index");
@@ -143,21 +160,18 @@ impl Dit {
                 }
             }
         } else {
-            let t = table![
-                StatusItem,
-                "Start",
-                |x| x.start().nice(),
-                "End",
-                |x| x.end().map(|e| e.nice()).unwrap_or(String::new()),
-                "Effort",
-                |x| x.effort().nice(),
-                "Total Effort",
-                |x| x.total_effort.nice(),
-                "Id",
-                |x| x.id.to_string(),
-                "Title",
-                |x| x.title.to_string(),
-            ];
+            let t = Table::new(properties
+                .iter()
+                .map(columns!(StatusItem,
+                    StatusProperties::Id          => "Id",          |x| x.id.to_string(),
+                    StatusProperties::Title       => "Title",       |x| x.title.to_string(),
+                    StatusProperties::Start       => "Start",       |x| x.start().nice(),
+                    StatusProperties::End         => "End",         |x| x.end().map(|e| e.nice()).unwrap_or(String::new()),
+                    StatusProperties::Effort      => "Effort",      |x| x.effort().nice(),
+                    StatusProperties::TotalEffort => "TotalEffort", |x| x.total_effort.nice(),
+                ))
+                .collect());
+
             t.print(&status);
         }
 
@@ -168,25 +182,22 @@ impl Dit {
         &self,
         mode: ListMode,
         format: ListFormat,
-        properties: &[TaskProperties],
+        properties: &[ListProperties],
         after: Option<Timestamp>,
         before: Option<Timestamp>,
     ) -> Result<()> {
         let data = self.repo.get_listing(after, before)?;
 
-        let t = table![
-            ListItem,
-            "Start",
-            |x| x.start().nice(),
-            "End",
-            |x| x.end().map(|e| e.nice()).unwrap_or(String::new()),
-            "Effort",
-            |x| x.effort().nice(),
-            "Id",
-            |x| x.id.to_string(),
-            "Title",
-            |x| x.title.to_string(),
-        ];
+        let t = Table::new(properties
+            .iter()
+            .map(columns!(ListItem,
+                ListProperties::Id     => "Id",     |x| x.id.to_string(),
+                ListProperties::Title  => "Title",  |x| x.title.to_string(),
+                ListProperties::Start  => "Start",  |x| x.start().nice(),
+                ListProperties::End    => "End",    |x| x.end().map(|e| e.nice()).unwrap_or(String::new()),
+                ListProperties::Effort => "Effort", |x| x.effort().nice(),
+            ))
+            .collect());
 
         match mode {
             ListMode::GroupByDay => {
@@ -230,7 +241,7 @@ fn group_by_day(x: &[ListItem]) -> impl Iterator<Item = (Date<FixedOffset>, &[Li
     })
 }
 
-impl FromStr for TaskProperties {
+impl FromStr for StatusProperties {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -241,6 +252,21 @@ impl FromStr for TaskProperties {
             "end" => Ok(Self::End),
             "effort" => Ok(Self::Effort),
             "total-effort" => Ok(Self::TotalEffort),
+            _ => bail!("Invalid task field: {}", s),
+        }
+    }
+}
+
+impl FromStr for ListProperties {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "id" => Ok(Self::Id),
+            "title" => Ok(Self::Title),
+            "start" => Ok(Self::Start),
+            "end" => Ok(Self::End),
+            "effort" => Ok(Self::Effort),
             _ => bail!("Invalid task field: {}", s),
         }
     }
