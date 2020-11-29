@@ -182,6 +182,7 @@ pub fn parse() -> ArgMatches {
                     .about("Prints just the current task plus the duration for which it has been active.")
                     .long("short")
                     .short('s')
+                    .exclusive(true)
             )
         )
         .subcommand(
