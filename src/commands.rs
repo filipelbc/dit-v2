@@ -10,6 +10,15 @@ use crate::utils::nice::Nice;
 use crate::utils::tables::{Column, Table};
 use crate::utils::time::Timestamp;
 
+pub enum TaskProperties {
+    Id,
+    Title,
+    Start,
+    End,
+    Effort,
+    TotalEffort,
+}
+
 pub enum ListMode {
     GroupByDay,
     Plain,
@@ -117,6 +126,7 @@ impl Dit {
         short: bool,
         rebuild: bool,
         limit: usize,
+        properties: &[TaskProperties],
     ) -> Result<()> {
         if rebuild {
             debug!("Rebuilding index");
@@ -158,6 +168,7 @@ impl Dit {
         &self,
         mode: ListMode,
         format: ListFormat,
+        properties: &[TaskProperties],
         after: Option<Timestamp>,
         before: Option<Timestamp>,
     ) -> Result<()> {
@@ -217,6 +228,22 @@ fn group_by_day(x: &[ListItem]) -> impl Iterator<Item = (Date<FixedOffset>, &[Li
             None
         }
     })
+}
+
+impl FromStr for TaskProperties {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "id" => Ok(Self::Id),
+            "title" => Ok(Self::Title),
+            "start" => Ok(Self::Start),
+            "end" => Ok(Self::End),
+            "effort" => Ok(Self::Effort),
+            "total-effort" => Ok(Self::TotalEffort),
+            _ => bail!("Invalid task field: {}", s),
+        }
+    }
 }
 
 impl FromStr for ListMode {

@@ -107,10 +107,12 @@ fn run(args: ArgMatches) -> Result<()> {
             cargs.is_present("short"),
             cargs.is_present("rebuild-index"),
             get_usize(cargs, "limit")?,
+            get_many(cargs, "properties")?.as_slice(),
         ),
         Some(("list", cargs)) => dit.do_list(
             get_single(cargs, "mode")?,
             get_single(cargs, "format")?,
+            get_many(cargs, "properties")?.as_slice(),
             get_timestamp(&cargs, "after")?,
             get_timestamp(&cargs, "before")?,
         ),

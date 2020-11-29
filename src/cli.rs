@@ -40,6 +40,15 @@ fn at_arg<'a>() -> Arg<'a> {
         .allow_hyphen_values(true)
 }
 
+fn properties_arg<'a>() -> Arg<'a> {
+    Arg::new("properties")
+        .about("Selects the properties to be printed for each task.")
+        .value_name("NAME")
+        .long("properties")
+        .short('p')
+        .use_delimiter(true)
+}
+
 fn new_app<'a>(name: &str) -> App<'a> {
     App::new(name).setting(AppSettings::UnifiedHelpMessage)
 }
@@ -184,6 +193,11 @@ pub fn parse() -> ArgMatches {
                     .short('n')
                     .default_value("10")
             )
+            .arg(
+                properties_arg()
+                    .possible_values(&["id", "title", "start", "end", "effort", "total-effort"])
+                    .default_values(&["id", "start", "effort", "total-effort"])
+            )
         )
         .subcommand(
             new_app("list")
@@ -208,6 +222,11 @@ pub fn parse() -> ArgMatches {
                     .takes_value(true)
                     .possible_values(&["table", "json-lines", "csv"])
                     .default_value("table")
+            )
+            .arg(
+                properties_arg()
+                    .possible_values(&["id", "title", "start", "end", "effort"])
+                    .default_values(&["id", "start", "effort"])
             )
             .arg(
                 Arg::new("after")
