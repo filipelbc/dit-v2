@@ -7,13 +7,6 @@ pub struct Column<R> {
     name: String,
 }
 
-#[macro_export]
-macro_rules! table {
-    ($t:ty, $($n:expr, $x:expr),+ $(,)?) => {
-        Table::new(vec![$(Column::<$t>::new($n, $x),)+])
-    };
-}
-
 impl<R> Table<R> {
     pub fn new(columns: Vec<Column<R>>) -> Self {
         Table { columns }
@@ -97,7 +90,10 @@ mod test {
 
     #[test]
     fn test_table() {
-        let table = table![Foo, "Foo", |x| x.a.to_string(), "B", |x| x.b.to_string(),];
+        let table = Table::new(vec![
+            Column::<Foo>::new("Foo", |x| x.a.to_string()),
+            Column::<Foo>::new("B", |x| x.b.to_string()),
+        ]);
 
         let data = vec![
             Foo { a: 12, b: "foo" },
