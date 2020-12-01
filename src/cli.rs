@@ -204,6 +204,12 @@ pub fn parse() -> ArgMatches {
             .visible_alias("l")
             .about("Lists log entries in chronological order, most recent first.")
             .arg(
+                Arg::new("check")
+                    .about("Checks if there are overlapping entries.")
+                    .long("check")
+                    .short('c')
+            )
+            .arg(
                 Arg::new("mode")
                     .about("Specifies how the listing should be organized.")
                     .value_name("MODE")

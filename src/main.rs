@@ -110,6 +110,7 @@ fn run(args: ArgMatches) -> Result<()> {
             get_many(cargs, "properties")?.as_slice(),
         ),
         Some(("list", cargs)) => dit.do_list(
+            cargs.is_present("check"),
             get_single(cargs, "mode")?,
             get_single(cargs, "format")?,
             get_many(cargs, "properties")?.as_slice(),

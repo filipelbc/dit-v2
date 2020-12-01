@@ -182,6 +182,7 @@ impl Dit {
 
     pub fn do_list(
         &self,
+        check: bool,
         mode: ListMode,
         format: ListFormat,
         properties: &[ListProperties],
@@ -189,6 +190,12 @@ impl Dit {
         before: Option<Timestamp>,
     ) -> Result<()> {
         let data = self.repo.get_listing(after, before)?;
+
+        if check && data.len() > 1 {
+            for i in 1..data.len() {
+                check_overlap(&data[i - 1], &data[i]);
+            }
+        }
 
         let t = Table::new(
             properties
@@ -220,6 +227,15 @@ impl Dit {
 
         Ok(())
     }
+}
+
+fn check_overlap(x: &ListItem, y: &ListItem) -> bool {
+    let overlaps = x.end().map(|e| e < y.start()).unwrap_or(false);
+
+    if overlaps {
+
+    }
+    overlaps
 }
 
 fn total_effort(x: &[ListItem]) -> Duration {
