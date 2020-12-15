@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use chrono::{Date, Duration, FixedOffset};
-use log::{debug, info};
+use log::{debug, info, warn};
 use std::str::FromStr;
 
 use crate::models::{ListItem, Repository, StatusItem, Task};
@@ -192,8 +192,16 @@ impl Dit {
         let data = self.repo.get_listing(after, before)?;
 
         if check && data.len() > 1 {
+            let mut n = 0;
+
             for i in 1..data.len() {
-                check_overlap(&data[i - 1], &data[i]);
+                if check_overlap(&data[i - 1], &data[i]) {
+                    n += 1;
+                }
+            }
+
+            if n > 0 {
+                bail!("Some entries overlap");
             }
         }
 
@@ -230,10 +238,12 @@ impl Dit {
 }
 
 fn check_overlap(x: &ListItem, y: &ListItem) -> bool {
-    let overlaps = x.end().map(|e| e < y.start()).unwrap_or(false);
+    let overlaps = y.end().map(|e| e > x.start()).unwrap_or(false);
 
     if overlaps {
-
+        warn!("Overlapping entries:");
+        warn!("    {} | {} | {}", x.start().nice(), x.end().nice(), x.id.to_string());
+        warn!("    {} | {} | {}", y.start().nice(), y.end().nice(), y.id.to_string());
     }
     overlaps
 }
