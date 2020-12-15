@@ -162,16 +162,16 @@ impl Dit {
         } else {
             let t = Table::new(
                 properties
-                    .iter()
-                    .map(columns!(StatusItem,
+                .iter()
+                .map(columns!(StatusItem,
                         StatusProperties::Id          => "Id",          |x| x.id.to_string(),
                         StatusProperties::Title       => "Title",       |x| x.title.to_string(),
                         StatusProperties::Start       => "Start",       |x| x.start().nice(),
                         StatusProperties::End         => "End",         |x| x.end().nice(),
                         StatusProperties::Effort      => "Effort",      |x| x.effort().nice(),
                         StatusProperties::TotalEffort => "TotalEffort", |x| x.total_effort.nice(),
-                    ))
-                    .collect(),
+                ))
+                .collect(),
             );
 
             t.print(&status);
