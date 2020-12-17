@@ -1,0 +1,6 @@
+#+TITLE: Dit 2
+
+Dit is a time tracking tool.
+
+Dit 2, is a re-implementation in Rust and is incompatible with version 1,
+which can be found in [[https://github.com/filipelbc/dit][here]].
