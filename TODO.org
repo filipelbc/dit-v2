@@ -1,0 +1,65 @@
+#+TITLE: Todo
+
+- Work Commands
+    - [x] New
+    - [x] Work on
+    - [x] Halt
+    - [x] Append
+    - [x] Cancel
+    - [x] Resume
+    - [x] Switch to
+    - [x] Switch back
+
+- Listing Commands
+    - Status
+        - [x] Prints latest log entry from each task, in chronological order (descending)
+        - [x] ~--short~ Useful for shell prompt plugin
+        - [x] ~--rebuild-index~
+    - List
+        - [x] Prints log entries in chronological order (descending)
+        - [x] ~--check~ check and warn about overlapping entries
+        - [x] ~--mode~ group-by-day, plain, daily-summary
+        - [ ] ~--format~ normal, csv, json
+        - [ ] Allow selecting tasks
+    - [x] Allow selecting fields
+
+- Editing commands
+    - [ ] Edit
+        - Open task toml file for manual editing in a text editor
+    - [ ] Fetch
+        - Run external command and parse its output in order to initialize a task title and other data
+        - [ ] Needs design
+    - [ ] Move
+        - Change task path/name
+
+- Index
+    - [x] Update index when saving task
+    - [x] Check index when clocking in
+    - [x] Check index when clocking out
+    - [x] Also store task title
+    - [x] Also store total clocked time
+
+- Other
+    - [x] Discard sub-second time precision
+    - [x] Serde durations in human friendly manner
+    - [x] Serde timestamps in more human friendly manner
+    - [x] Preserve original timezones
+    - [ ] Task key resolution
+    - [ ] Review behavior of ctrlc during prompt
+        - Branch: ~catch-ctrlc-during-prompt~
+    - [ ] Add pager to "status" and "list" commands
+    - [ ] Improve logging format
+    - Review code organization
+        - [ ] Separate cli concern better
+        - [ ] Organize models better
+
+- Consistency
+    - [x] Index should contain at most one "active" task
+    - [x] Sort task log when loading
+    - [ ] Index should not contain overlapping entries
+    - [ ] Log entries should not overlap /in general/
+        - How to enforce this /in general/?
+        - Currently, there is only ~--check~ in ~list~ command
+
+- Tables
+    - [x] Headers
